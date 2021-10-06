@@ -1,4 +1,4 @@
-setwd("C:\\Clases\\EGE_2021_2022\\Theme II")
+setwd("/home/ajo/gitRepos/stat4BusMan/Week4")
 Y<-read.csv("prod.csv",sep = ",",col.names = 1)
 Y<-as.matrix(Y)
 head(Y)
@@ -16,6 +16,7 @@ DPMO
 
 DPMO<-1000000*(pnorm(LSL,mu-1.5*sigma,sigma))
 DPMO
+
 # 2.2
 x <- seq(min(Y), max(Y), length = 100)
 f1 <- dnorm(x, mean = mu+1.5*sigma, sd = sigma)
@@ -29,6 +30,7 @@ abline(v=USL,lwd=2,lty=2)
 # 2.3
 faults<-sum((Y>USL)+(Y<LSL))
 faults
+
 # 2.4
 prob<-faults/nrow(Y)
 prob

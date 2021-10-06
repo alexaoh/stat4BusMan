@@ -1,0 +1,15 @@
+---
+title: "'Techical Note'¨ found in Verdens Gang (Norwegian Newspaper)"
+author: "Alexander J Ohrt"
+date: "06.10.2021"
+output: pdf_document
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>")
+```
+
+# Individuals with Tattoos Have Greater Injection Phobia
+
+The [article](https://www.vg.no/nyheter/innenriks/i/G3j3gx/studie-tatoverte-og-piercede-mest-plaget-av-sproeyte-og-tannlegeskrekk) (in Norwegian) states that people with tattoos and piercings are bothered by injection phobia and dentophobia to a greater degree than other people. The [paper](https://www.jstage.jst.go.jp/article/josnusd/advpub/0/advpub_21-0136/_pdf) that the article is based on states that 101 people, recruited in Bergen, Norway participated in the study. I would say that the paper is professionally written and precise. However, I think the size of the group of participants - 55 in the tattoo/piercing group and 46 in the control group - seems small. Also, all the people were recruited from 10 tattoo/piercing studios (for the study group) and from a hairdressing studio (for the control group), which I would imagine leads to a somewhat homogeneous group of people. Hence, I think some possible improvements would be to recruit more people, with larger varieties. Also, the majority of the participants where male and the age mean in the two groups differs by 8.5 years, both of which could be improved. These challenges, among others, are discussed in the paper. 
