@@ -1,0 +1,98 @@
+---
+title: "Exercise 2 - The Six Sigma Method"
+author: "Alexander J Ohrt - Statistics for Business Management"
+date: "06.10.2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>")
+setwd("/home/ajo/gitRepos/stat4BusMan/Week4")
+```
+
+# Exercise done in place of lecture 
+
+A process is assumed optimal if the production time (in
+minutes) per unit is distributed as a Normal (30, 2), i.e. a
+normal distribution with mean equal 30 and variance equal 2. A
+set of production times are observed for 5, 000 units. The file
+“prod.csv” contains the data
+
+```{r}
+# Import data. 
+Y<-read.csv("prod.csv",sep = ",",col.names = 1)
+Y<-as.matrix(Y)
+head(Y)
+summary(Y)
+
+# Parameters.
+mu=30
+sigma=sqrt(2)
+```
+
+
+## 1. Calculate the LSL and USL values in a Six Sigma environment.
+
+```{r}
+(LSL <- (-6) * sigma + mu)
+(USL <- 6 * sigma + mu)
+```
+
+As is apparent from the code above, LSL $\approx$ `r round(LSL, 2)` and USL $\approx$ `r round(USL, 2)`.
+
+## 2. Analyse how the actual production process (data set information) is not adapted to Six Sigma environment
+
+First of all, DPMO $\approx$ `r round(1000000*(1-pnorm(USL,mu+1.5*sigma,sigma)), 2)`, as is seen from the output below also. 
+
+```{r}
+(DPMO <- 1000000*(1-pnorm(USL,mu+1.5*sigma,sigma)))
+```
+
+This means that we will have approximately `r round(DPMO, 1)` defective parts per million opportunities in the long run. Hence, this is a Six Sigma process. 
+
+Furthermore, the amount of observations that are outside the limits of LSL and USL are 
+
+```{r}
+(out <- length(Y[Y>USL | Y < LSL]))
+```
+which means that 
+
+```{r}
+out/dim(Y)[1]*10^6
+```
+ and hence, from the Sigma Scale table, this is a 4 sigma process. **This is a contradiction, what is correct here?**
+
+Moreover, the code block below shows a plot of LSL, USL, the standard normal probability distribution with mean 0 and mean 1.5 and a histogram of the data. 
+
+```{r}
+x <- seq(min(Y), max(Y), length = 100)
+f1 <- dnorm(x, mean = mu+1.5*sigma, sd = sigma)
+f2 <- dnorm(x, mean = mu, sd = sigma)
+hist(Y,xlim = c(LSL,USL),ylim=c(0,0.3),probability = T,main = "", breaks = 50)
+lines(x,f1,type="l",lwd=2,lty=2)
+lines(x,f2,type="l",lwd=2,lty=1)
+abline(v=LSL,lwd=2,lty=2)
+abline(v=USL,lwd=2,lty=2)
+```
+
+We can see that there are no defects above the USL, which again shows that this is a Six Sigma process. 
+
+## 3. Calculate the number of faults per million following the observed production process.
+
+```{r}
+(faults<-sum((Y>USL)+(Y<LSL)))
+```
+
+As seen from the calculation above, the number of fault per million is approximately `r faults` (I already found this above also). 
+
+
+## 4. Obtain the $k\sigma$ process that is adapted to the observed data
+
+```{r}
+prob<-faults/nrow(Y)
+prob
+k<-qnorm(1-prob,1.5,1)
+k
+```
+
+**What does this mean?**
