@@ -48,7 +48,7 @@ First of all, DPMO $\approx$ `r round(1000000*(1-pnorm(USL,mu+1.5*sigma,sigma)),
 (DPMO <- 1000000*(1-pnorm(USL,mu+1.5*sigma,sigma)))
 ```
 
-This means that we will have approximately `r round(DPMO, 1)` defective parts per million opportunities in the long run. Hence, this is a Six Sigma process. 
+This means that we will have approximately `r round(DPMO, 1)` defective parts per million opportunities in the long run. Hence, this is a Six Sigma process (This is the theoretical processs). 
 
 Furthermore, the amount of observations that are outside the limits of LSL and USL are 
 
@@ -60,7 +60,7 @@ which means that
 ```{r}
 out/dim(Y)[1]*10^6
 ```
- and hence, from the Sigma Scale table, this is a 4 sigma process. **This is a contradiction, what is correct here?**
+ and hence, from the Sigma Scale table, this is a 4 sigma process. **This is a contradiction, what is correct here?** --> This is the empirical process, while the above shows that the theoretical process is optimal, i.e. Six Sigma.  
 
 Moreover, the code block below shows a plot of LSL, USL, the standard normal probability distribution with mean 0 and mean 1.5 and a histogram of the data. 
 
@@ -93,6 +93,11 @@ prob<-faults/nrow(Y)
 prob
 k<-qnorm(1-prob,1.5,1)
 k
+
+sqrt(var(Y))
+
 ```
 
-**What does this mean?**
+**What does this mean?** --> Hence, one needs to reduce the variance from 2.95 (which is the std in the data, as seen above) to 2 (which is the given std for the theoretical optimal process) in order to reah the optimal process. 
+
+## 5. In Atenea: Calculated $C_p$ also. 
