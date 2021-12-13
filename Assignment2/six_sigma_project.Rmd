@@ -1,0 +1,62 @@
+---
+title: "Six-Sigma Project: Production of phones at PhoneNow"
+author: "Alexander and Rodrigo"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    fig_caption: yes
+    include:
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+  pdf_document:
+    toc: yes
+    toc_depth: 2
+toc-title: Index
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T, warning = F)
+setwd("/home/ajo/gitRepos/stat4BusMan/Assignment2")
+```
+
+# Background
+
+PhoneNow is a small technology company, especially known for producing high quality phones to a low cost. Their business strategy is based on selling large quantities of good quality phones to the low-end market. In this way the avoid the large market shares of Apple and Samsung in the luxury phone market. Their main competitors are Xiaomi, Nokia and Moto, among others. Moreover, they only sell products directly from their own website, and the products are made on-demand. This way, their business does not require very large amounts of capital at all times, since they use capital they get directly from each customer for their costs. Also, they guarantee a production (and delivery) time of maximum one month, i.e. the customer should have their phone in their hand within one month. If this guarantee is not fulfilled, the customer receives a 10\% discount. Furthermore, if the phone is not to the quality that the customer expects, PhoneNow will make a new phone for the respective customer. 
+
+Their business has been very successful the last couple of years, with the market shares growing. However, the last two months they have received much larger amounts of complaints on production time and quality of their products. This is why the Six-Sigma will be employed, with the goal of resolving some of the issues. The initial project was to reduce the number of complaints from the customers, both when it comes to production time and quality of the products. 
+
+The Steering Committee estimated that the percentage of unsatisfied customers because of long production time with lower quality than expected was between 10\% and 15\%. A maximum level equal to 3\% was deemed as acceptable.
+
+**Should we make some estimations about the amount of customers that are not happy?**
+
+A team of 2 managers was launched, led by a Black Belt (BB), formed in the UPC.
+
+# Define
+
+## Project Charter
+
+## SIPOC
+![**Figure:** SIPOC diagram](SIPOC_diagram-1.png)
+
+## CTx and/or VoC
+
+## CTQ
+Critical to Quality: 
+**Fill in these according to the theory from the Beamer**
+
+## VoC
+Voice of Customer: 
+
+## Business Case
+The annual turnover of PhoneNow is 100,000 €.
+
+The 15\% of delayed production with 10% of discounts supposes a cost of ????
+
+**Also: what about the cost of the people that get a bad quality phone!?**
+
+Estimation has been validated by the finance director.
+
+# Questions to answer
+
+# Control Chart

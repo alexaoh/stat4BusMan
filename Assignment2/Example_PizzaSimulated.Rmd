@@ -1,0 +1,537 @@
+---
+title: "DMAIC Example: A pizza delivery company"
+author: "Catalina Bolancé"
+date: "05/10/2021"
+output:
+  html_document:
+    fig_caption: yes
+    include:
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+  pdf_document:
+    toc: yes
+    toc_depth: 2
+  word_document:
+    fig_caption: yes
+    reference_docx: template.docx
+    toc: yes
+    toc_depth: 2
+toc-title: Index
+---
+
+<p style="text-align:right;">
+<style type="text/css">
+  body{
+  font-size: 12pt;
+}
+</style>
+
+*Date of this draft*: `r today <- Sys.Date();format(today, format="%d %B %Y")`</p>
+
+
+# Background 
+
+- PizzaMoto is a pizza delivery business from 2010.
+
+- The business strategy is based on having less delivery time than competitors, 25 minutes. If the delivery time is exceeded, there is a 25% reduction in price. Only customers in the area close to each pizza restaurant are served (4 restaurants, two in Barcelona and two in Madrid).
+
+- Business is very successful, but at the end of 2012 was observed a huge increase in the complaints of delays, with the consequent impact on the business.
+
+- The management decided to start a Six Sigma program. The initial project was to reduce the number of late deliveries.
+
+- There was no culture of "data base management". 
+
+- The Steering Committee estimated that the percentage of late deliveries was between 10% and 15%. A maximum level equal to 3% was acceptable.
+
+- A team of four managers was launched led by a Black Belt (BB) formed in the University.
+
+# Installing packages
+
+install.packages("e1071")
+
+install.packages("ggplot2")
+
+install.packages("gridExtra")
+
+# Define
+
+## D.1: Clarify purpose
+
+![](fig2_8.png)
+ 
+
+## D.2: SIPOC
+
+![](fig2_9.png)
+
+## D.3 CTQ and VoC
+
+<font size="5"> **CTQ** </font>
+
+With "Focus Groups" and "Affinity Diagram" **the major discovery** was:
+
+<font size="5"> 30 minutes is OK if the pizza arrives hot</font>  
+
+
+<font size="5"> **VoC** </font>
+
+Using a survey stratified by city:
+
+- To confirm and quantify what had already been discovered
+- To find issues related with the different kinds of pizza
+- To explore the possibility of offering additional services
+
+![**Figure:** Customer CTQ characteristics](fig2_10.png)
+
+## D.4 Business Case
+
+The annual turnover of the 4 shops is 1,100,000 €.
+
+The 15 % of delayed deliveries with 25% of discounts supposes a cost of 140,000 €.
+
+Estimation has been validated by the finance director.
+
+## D.5 Final project charter
+
+![](fig2_11.png)
+
+# Measure
+## M.1 Asking questions and diagram process
+
+The **questions**  are: 
+
+- How long do the pizzas need to be delivered?
+- At what temperature do pizzas arrive at client's home?
+- How long does it take from order to shipment and from shipment to delivery?
+- Are there better and worse shops?
+- Are there more delays some days than others?
+- Are there more delays some hours than others?
+- Are the most expensive orders delayed more that others?
+- Have some motorcyclist higner delays than others?
+
+The **diagram porcess** is:
+
+![](fig2_12.png)
+
+## M.2 Review existing data and validate the measurement system
+
+The **existing data** are:
+
+- The measures that were available were not only scarce, but also incomplete (there was no information to answer questions) and unreliable
+
+- For one month (September), the operator wrote down the time of the order and motorcyclist wrote down the delivery time
+
+- There are not sure of the reliability of the measurement system
+
+A  **system to measure** delays (delivery time) and the temperature of the pizza when it reaches the customer was needed. 
+
+- The order form is converted into an "itinerant form"
+
+- An operational definition of the measurement system is prepared 
+
+- A digital clock is placed visible to all, digital clocks are given to motorcyclist (synchronized) and thermometers are placed in the pizza boxes
+
+- An explanation is given to everybody (telephone operators, cookers and motorcyclist) about the importance of having good data and the benefits of the study
+
+- Validation: a discount is offered on the next order to customers that call telling the time when the pizza was received and if the pizza was hot, the supervisor writes down some times on the shop
+
+- The study of the new measurement system shows that it is reliable enough
+
+## M.3 Collect new data
+
+For a month data were collected (according to the defined system, that was improved a little bit) in the four shops, two in Madrid (M) and two in Barcelona (B)
+
+Shop  |Years opened| Volume    
+:--|:------:|:--------------:
+M1|4   |>600,000€ 
+M2|2   |300,000€-600,000€
+B1|6   |<300,000€
+B2|3   |>800,000€ 
+
+
+- It was easier to collect data from all orders
+
+- It was decided to continue checking the validity of the measurement system
+
+- The data collected in the order form could be stratified by: time, pizza type, city area and motorcyclist
+
+- Some space for comments was provided
+
+## M.4 Answer questions (existing data)
+
+<font size="4"> **Number of deliveries** by shop. </font>
+
+```{r comment="", echo=TRUE, eval=TRUE} 
+library(ggplot2)
+library(gridExtra)
+setwd("/home/ajo/gitRepos/stat4BusMan/Assignment2")
+
+ndel<-read.table("Data_ndel.csv", header = T, sep = ",",stringsAsFactors = T)
+
+summary(ndel)
+p1<-qplot(day,ShopB1,data = ndel, ylab = "B1",ylim = c(0,120),color=Type)
+p2<-qplot(day,ShopB2,data = ndel, ylab = "B2",ylim = c(0,120),color=Type)
+p3<-qplot(day,ShopM1,data = ndel, ylab = "M1",ylim = c(0,120),color=Type)
+p4<-qplot(day,ShopM2,data = ndel, ylab = "M2",ylim = c(0,120),color=Type)
+grid.arrange(p1,p2,p3,p4,nrow=2)
+
+```
+
+<font size="4"> The four shops have similar behavior for the number of deliveries. We decide work with one shop, the B2 </font>
+
+In total we have n=`r sum(ndel$ShopB2)` deliveries in a month (30 days).
+
+<font size="5"> **How long are pizzas delayed?. Are there more delays some days than others?**</font>
+
+```{r comment="", echo=TRUE, eval=TRUE} 
+library(e1071)
+tdelay<-read.table("delivtime.csv", header = T, sep = ";")
+
+# Summary delayed time by day (weekday versus holiday)
+descrip = matrix(0,2,8)
+colnames(descrip) <-  c("N","Min", "Mean", "Median","Max", "STD", "Skew","Kur")
+rownames(descrip) <-  c("Weekday", "Holiday")
+descrip[,1] <- aggregate(time ~ type, data=tdelay, length)$time
+descrip[,2] <- aggregate(time ~ type, data=tdelay, min)$time
+descrip[,3] <- aggregate(time ~ type, data=tdelay, mean)$time
+descrip[,4] <- aggregate(time ~ type, data=tdelay, median)$time
+descrip[,5] <- aggregate(time ~ type, data=tdelay, max)$time
+descrip[,6] <- sqrt(aggregate(time ~ type, data=tdelay, var)$time)
+descrip[,7] <- aggregate(time ~ type, data=tdelay, skewness)$time
+descrip[,8] <- aggregate(time ~ type, data=tdelay, kurtosis)$time
+knitr::kable(descrip,digits=2, caption="Descriptive statistics")
+
+# Six sigma analysis
+tdelayw<-tdelay[tdelay$type==1,]
+nrow(tdelayw)
+tdelayh<-tdelay[tdelay$type==0,]
+nrow(tdelayh)
+gridw<-c(100:400)/10
+fnormw<-dnorm(gridw,mean=22.55,sd=2.95)
+fnormw<-cbind(gridw,fnormw)
+gridh<-c(50:400)/10
+fnormh<-dnorm(gridh,mean=21.42,sd=4.41)
+fnormh<-cbind(gridh,fnormh)
+par(mfrow=c(1,2))
+hist(tdelayw$time,xlim = c(10,35),probability = T,xlab="Time",main = "Weekday")
+lines(gridw,fnormw[,2],type="l",lwd=2,lty=1)
+abline(v=25,lwd=2,lty=2)
+hist(tdelayh$time,xlim = c(5,40),probability = T,xlab="Time",main = "Holiday")
+lines(gridh,fnormh[,2],type="l",lwd=2,lty=1)
+abline(v=25,lwd=2,lty=2)
+```
+
+For all day, the k Sigma process is analysed.
+
+```{r comment="", echo=TRUE, eval=TRUE} 
+# Calculate the "k sigma" process and numbers of faults by million opportunities
+N<-nrow(tdelay)
+Mindel<-min(tdelay$time)
+Meandel<-mean(tdelay$time)
+Mededel<-median(tdelay$time)
+Maxdel<-max(tdelay$time)
+Stddel<-sqrt(var(tdelay$time))
+Skewdel<-skewness(tdelay$time)
+Kurdel<-kurtosis(tdelay$time)
+desc<-cbind(N,Mindel,Meandel,Mededel,Maxdel,Stddel,Skewdel,Kurdel)
+knitr::kable(desc,digits=3, caption="Descriptive statistics")
+
+grid<-c(50:400)/10
+fnorm<-dnorm(grid,mean=22.045,sd=3.721)
+fnorm<-cbind(grid,fnorm)
+
+par(mfrow=c(1,1))
+hist(tdelay$time,xlim = c(5,40),probability = T,xlab="Time",main = "All days")
+lines(grid,fnorm[,2],type="l",lwd=2,lty=1)
+abline(v=25,lwd=2,lty=2)
+
+
+nfaults<-(sum(tdelay$time>25)/nrow(tdelay))*1000000
+print("Faults per million")
+print(nfaults)
+
+muhat<-mean(tdelay$time)
+shat<-sqrt(var(tdelay$time))
+
+k<-(25-muhat)/shat
+print(k)
+
+```
+
+## M.4 Answer questions (new data)
+
+<font size="5"> **How long do pizzas take to be delivered?**</font>
+
+```{r comment="", echo=TRUE, eval=TRUE} 
+tdelay_new<-read.table("delivtime_new.csv", header = T, sep = ",")
+summary(tdelay_new)
+grid<-c(50:400)/10
+fnorm<-dnorm(grid,mean = 20.495,sd=4.002)
+fnorm<-cbind(grid,fnorm)
+par(mfrow=c(1,1))
+hist(tdelay_new$time,xlim = c(5,35),ylim = c(0,0.1),probability = T,xlab="Time",main = "All days",20)
+lines(grid,fnorm[,2],type="l",lwd=2,lty=1)
+abline(v=25,lwd=2,lty=2)
+N<-nrow(tdelay_new)
+Mindel<-min(tdelay_new$time)
+Meandel<-mean(tdelay_new$time)
+Mededel<-median(tdelay_new$time)
+Maxdel<-max(tdelay_new$time)
+Stddel<-sqrt(var(tdelay_new$time))
+Skewdel<-skewness(tdelay_new$time)
+Kurdel<-kurtosis(tdelay_new$time)
+desc<-cbind(N,Mindel,Meandel,Mededel,Maxdel,Stddel,Skewdel,Kurdel)
+knitr::kable(desc,digits=3, caption="Descriptive statistics")
+
+nfaults<-(sum(tdelay_new$time>25)/nrow(tdelay))*1000000
+print("Faults per million")
+print(nfaults)
+
+muhat<-mean(tdelay_new$time)
+shat<-sqrt(var(tdelay_new$time))
+
+k<-(25-muhat)/shat
+print(k)
+```
+
+<font size="5"> **At what temperature do pizzas arrive home?**</font>
+
+```{r comment="", echo=TRUE, eval=TRUE} 
+ttemp<-read.table("temperature.csv", header = T, sep = ",")
+
+N<-nrow(ttemp)
+Mintem<-min(ttemp$temp)
+Meantem<-mean(ttemp$temp)
+Medtem<-median(ttemp$temp)
+Maxtem<-max(ttemp$temp)
+Stdtem<-sqrt(var(ttemp$temp))
+Skewtem<-skewness(ttemp$temp)
+Kurtem<-kurtosis(ttemp$temp)
+desc<-cbind(N,Mintem,Meantem,Medtem,Maxtem,Stdtem,Skewtem,Kurtem)
+knitr::kable(desc,digits=3, caption="Descriptive statistics")
+
+grid<-c(650:1000)/10
+fnorm<-dnorm(grid,mean = 82.12,sd=4.86)
+
+fnorm<-cbind(grid,fnorm)
+par(mfrow=c(1,1))
+hist(ttemp$temp,xlim = c(65,95),ylim = c(0,0.15),probability = T,xlab="Temperature",main = "All days",20)
+lines(grid,fnorm[,2],type="l",lwd=2,lty=1)
+abline(v=80,lwd=2,lty=2)
+
+
+nfaults<-(sum(ttemp$temp<80)/nrow(ttemp))*1000000
+print("faults per million")
+print(nfaults)
+
+muhat<-mean(ttemp$temp)
+shat<-sqrt(var(ttemp$temp))
+
+k<-(muhat-80)/shat
+print(k)
+
+```
+
+## M.4 Answer questions
+The first graphics and preliminary analysis showed, among other things:
+
+- The problem was focused on delivery time
+
+- There were differences among motorist
+
+- Delivery times were more variable on weekends
+
+- It seems that neither peaks (agglomerations) or order size or type of pizza were causing delays
+ 
+## M.5 Determine the starting point
+
+<font size="4"> Information about the behaviour of the process variables $X$'s. </font>
+
+# Analysis
+
+## A.1 Refocus the project: Review the project charter
+
+- There was the temptation to consider the project finished when it was discovered that 30 minutes was acceptable to the clients and that the level of deliveries currently above 30 minutes was less than $1\%$ ($4.5\sigma$).
+
+```{r comment="", echo=TRUE, eval=TRUE} 
+
+1-pnorm(30,mean = 20.495,sd=4.002)
+sum(tdelay_new$time>30)/nrow(tdelay_new)
+
+```
+![](fig2_14.png)
+
+- Concentrate on the distribution time and ensure that the pizza arrives hot
+
+- Consider a new goal: process with less that $0.5\%$ of deliveries with $t>30\, min.$ (revise Final Project Charter)
+
+- Make small improvement and be more rigorous with internal processes 
+
+![](fig2_15.png)
+
+## A.2 Hypothesis generation (possibles causes)
+
+- The delivery temperature is a function of delivery time
+
+- A brainstorming session on excessive tiem delivery causes gave the following diagram:
+![](fig2_16.png)
+
+## A.3 Hypothesis testing 
+
+<font size="5"> Does de delivery temperature depend on the delivery time? </font>
+$$Temperature=102.24573-0.96653\times Time$$
+```{r comment="", echo=TRUE, eval=TRUE} 
+summary(lm(ttemp$temp ~ ttemp$time))
+plot(ttemp$time,ttemp$temp,pch=16,col="red",xlab="Time", ylab="Temperature")
+abline(lm(ttemp$temp ~ ttemp$time), col = "blue",lwd=2)
+plot(lm(ttemp$temp ~ ttemp$time))
+```
+
+<font size="5"> Are there better and worse shops? </font>
+
+```{r comment="", echo=TRUE, eval=TRUE} 
+tdel_sh<-read.table("tdelivshops.csv", header = T, sep = ",",stringsAsFactors = T)
+
+boxplot(tdel_sh$time~tdel_sh$Shop,ylab = "Shop",xlab = "")
+summary(aov(time ~ Shop, data = tdel_sh))
+
+tdel_sh$delay<-as.numeric(tdel_sh$time>30)
+a1<-aggregate(tdel_sh$time,by = list(tdel_sh$Shop),FUN = mean)   
+a2<-aggregate(tdel_sh$time,by = list(tdel_sh$Shop),FUN = sd)  
+a3<-aggregate(tdel_sh$time,by = list(tdel_sh$Shop),FUN = length)
+a4<-aggregate(tdel_sh$delay,by = list(tdel_sh$Shop),FUN = mean)
+
+Results<-cbind(a3[,2],a1[,2],a2[,2],a4[,2])
+colnames(Results)<-c("N","Mean","STD","% Delays")
+rownames(Results)<-c("B1","B2","M1","M2")
+knitr::kable(Results,digits=3, caption="Results by shop")
+```
+
+<font size="5"> CONCLUSIONS: </font>
+
+- The temperature depends on delivery time ($60\%$)
+
+- Shops M1 and M2 have expanded their area of activity and serve customers further away causing about 3% of delays and motorists are the more saturated
+
+- There are significant differences among the delivery times of motorists and are related to the knowledge of the area
+
+# Improve
+
+## I.1 Generate list of possible improvements
+
+- Brainstorming
+
+- Listen to customers
+
+- Talk to motorbikers
+
+- Talk to kitcheners
+
+-...
+
+## I.2 Select improvements
+
+![](fig2_18.png)
+
+## I.3 Assess risks and pilot test
+
+A new process was designed to reduce errors in addresses and redefine areas to serve. It was tested  in B1 and M1 for a week.
+
+The following analysis compare the number of errors in the addresses    using the new process in B1 and M1 and using the traditional process in B2 and M2.
+
+```{r comment="", echo=TRUE, eval=TRUE} 
+dataTest<-read.csv("pilot_test.csv",row.names = 1)
+summary(dataTest)
+tab<-table(dataTest$Group,dataTest$Error)
+x<-c(tab[,2])
+x
+n<-rowSums(tab)
+n
+prop.test(x,n,alternative = "two.sided")
+
+```
+Furthermore, different types of "thermal hot bag" were tested. A test was performed to compare the delivery temperature with and without bag.
+```{r comment="", echo=TRUE, eval=TRUE} 
+dataTest2<-read.csv("pilot_test2.csv",row.names = 1)
+summary(dataTest2)
+plot(dataTest2$t1,pch=16,col="red",xlab = "Index",ylab = "Temperature")
+points(dataTest2$t2,pch=16,col="blue")
+legend("topleft",c("Without bag","Hot bag"),col=c("blue","red"),pch=c(16,16))
+
+t.test(dataTest2$t1, dataTest2$t2, alternative = "two.sided", var.equal = FALSE)
+```
+
+## I.4 Implementation
+
+- A timetable of activities (with responsibles and available resources) was established.
+
+- Managers were trained in the new process and it was launched in the 4 establishments.
+
+- Thermal bags were purchased for all motorists.
+
+- Motorists were trained about the streets in the area and some time was allocated for them to share information learn routes.
+
+# Control
+
+## C.1 Standardize
+
+UNDERSTOOD $\Longrightarrow$ DOCUMENTED $\Longrightarrow$ MEASURED  $\Longrightarrow$ IMPROVED
+
+## C.2 Control at the new level
+
+A tracking system for registering time and temperature was progressively established $\Longrightarrow$ SENSORS
+
+## C.3 Non-financial performance assesment
+
+```{r comment="", echo=TRUE, eval=TRUE} 
+# Time
+time_new<-read.csv("time_new.csv",row.names = 1)
+summary(time_new)
+grid<-c(50:400)/10
+fnorm<-dnorm(grid,mean = 20.37,sd=1.5)
+fnorm<-cbind(grid,fnorm)
+
+nfaults<-(sum(time_new>25)/N)*1000000
+print("faults per million >25")
+print(nfaults)
+
+nfaults<-(sum(time_new>30)/N)*1000000
+print("faults per million >30")
+print(nfaults)
+# Temperature
+ttemp_new<-read.csv("ttemp_new.csv",row.names = 1)
+summary(ttemp_new)
+grid2<-c(750:1000)/10
+fnorm2<-dnorm(grid2,mean = 85,sd=3)
+fnorm2<-cbind(grid2,fnorm2)
+
+nfaults<-(sum(ttemp_new<80)/nrow(ttemp_new))*1000000
+print("faults per million <80")
+print(nfaults)
+
+par(mfrow=c(1,2))
+hist(time_new$x,xlim = c(12,32),ylim = c(0,0.3),probability = T,xlab="Time",main ="" ,20)
+lines(grid,fnorm[,2],type="l",lwd=2,lty=1)
+abline(v=25,lwd=2,lty=2)
+
+hist(ttemp_new$x,xlim = c(75,95),ylim = c(0,0.2),probability = T,xlab="Temperature",main = "",20)
+lines(grid2,fnorm2[,2],type="l",lwd=2,lty=1)
+abline(v=80,lwd=2,lty=2)
+
+```
+
+## C.3 Financial performance assessment
+
+![](fig2_20.png)
+
+## C.4 Close the project (being aware of the things not yet finished)
+
+- Project documentation
+
+- Lessons learned
+
+- Celebration and recognition
+
+
+<font size="8">END </font>
