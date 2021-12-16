@@ -17,7 +17,7 @@ toc-title: Index
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = T, warning = F)
-setwd("/home/ajo/gitRepos/stat4BusMan/Assignment2")
+#setwd("/home/ajo/gitRepos/stat4BusMan/Assignment2")
 ```
 
 # Background
@@ -54,6 +54,76 @@ The 15\% of delayed production with 10% of discounts supposes a cost of ????
 **Also: what about the cost of the people that get a bad quality phone!?**
 
 Estimation has been validated by the finance director.
+
+
+### Order to Delivery
+We divide this process into 1) order to shipment and 2) shipment to delivery. The company only has 1) completely under control whereas 2) is given to another company.
+
+```{r}
+N=1000
+# time from customer ordering to phone being ready for shipment
+t_to_ship = rexp(N,1/7) + rnorm(N,7,2)
+
+#more shipment two companies are used. maybe there's a difference
+t_ship_comp1 = rexp(N/2,1/2) + rnorm(N/2,0.5,0.2)
+t_ship_comp2 = rexp(N/2,1/2.5) + rnorm(N/2,0.5,0.01)
+
+total_time = t_to_ship + c(t_ship_comp1,t_ship_comp2) # company1 shipped the 1st half of phones, comp2 the 2nd
+
+hist(total_time,main="Time from order to delivery", xlab="Days", col=4)
+```
+
+Let's compare both shipment companies to see if we should prefer one over the other.
+
+```{r}
+wilcox.test(t_ship_comp1,t_ship_comp2)
+median(t_ship_comp1) < median(t_ship_comp2)
+```
+
+
+In fact there is a significant difference between the delivery time of both companies. If possible, commissioning the first should be preferred.
+
+
+### Quality of Phones by 3x2 different Material Suppliers
+
+The company receives the glass either from the company "Gorilla Glass", "Special Glass" or "Simple Glass" and also the touch screen technology is ordered from two different suppliers "1" and "2".
+
+```{r}
+# first simulate latent quality variables
+q_gorilla = rnorm(N,0.8,0.2)
+q_special = rnorm(N,0.85,0.1)
+q_simple  = rnorm(N,0.77,0.3)
+
+
+q_touch1 = rnorm(0.9,0.11)
+q_touch2 = rnorm(0.8,0.25)
+
+for (v in c(q_gorilla,q_special,q_simple, q_touch1, q_touch2)){
+  if (v < 0) v=0
+  if (v>1) v=1
+}
+
+#init
+phones_working = vector('numeric',6) 
+M = 150 #each of the 6 cells gets 150 datapoints
+
+for (i in 1:6){
+  phones_working = sum( rbinom(M,1,q_touch1[1:M]) * rbinom(M,1,q_gorilla[1:M]))
+}
+
+## produces NaNs bc for loop wasn't executed as intented
+#
+```
+
+```{r}
+# maybe easier way to produce the data
+pw_11 = rbinom(M,1,0.99)
+pw_12 = rbinom(M,1,0.98)
+pw_21 = rbinom(M,1,0.95)
+pw_22 = rbinom(M,1,0.96)
+pw_31 = rbinom(M,1,0.92)
+pw_32 = rbinom(M,1,0.93)
+```
 
 # Measure
 
