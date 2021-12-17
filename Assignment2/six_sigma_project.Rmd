@@ -1,9 +1,10 @@
 ---
 title: "Six-Sigma Project: Production of phones at PhoneNow"
-author: "Alexander and Rodrigo"
+author: "Alexander, Rodrigo and Johannes"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
+    code_folding: hide
     fig_caption: yes
     include:
     number_sections: yes
@@ -22,9 +23,9 @@ knitr::opts_chunk$set(echo = T, warning = F)
 
 # Background
 
-PhoneNow is a small technology company, especially known for producing high quality phones at a low cost. Their business strategy is based on selling large quantities of good quality phones to the low-end market. In this way the avoid the large market shares of Apple and Samsung in the luxury phone market. Their main competitors are Xiaomi, Nokia and Moto, among others. Moreover, they only sell products directly from their own website, and the products are made on-demand. This way, their business does not require very large amounts of capital at all times, since they use capital they get directly from each customer for their costs. Also, they guarantee a production (and delivery) time of maximum one month, i.e. the customer should have their phone in their hand within one month. If this guarantee is not fulfilled, the customer receives a 10\% discount. Furthermore, if the phone is not to the quality that the customer expects, PhoneNow will make a new phone for the respective customer. 
+PhoneNow is a small technology company, especially known for producing high quality phones at a low cost. Their business strategy is based on selling good quality phones to the low-end market. In this way they avoid the large market shares of Apple and Samsung in the luxury phone market. Their main competitors are Xiaomi, Nokia and Moto, among others. Moreover, they only sell products directly from their own website, and the products are made on-demand. In this way, their business does not require large amounts of capital, since they use capital they get directly from each customer for their costs. Also, they guarantee a production (and delivery) time of maximum one month, i.e. the customer should have their phone in their hand within one month. PhoneNow also guarantees customer satisfaction when it comes to the quality of the phone; if the phone is not to the quality that the customer expects, PhoneNow will make a new phone for the respective customer. 
 
-Their business has been very successful the last couple of years, with the market shares growing. However, the last two months they have received much larger amounts of complaints on production time and quality of their products. This is why the Six-Sigma will be employed, with the goal of resolving some of the issues. The initial project was to reduce the number of complaints from the customers, both when it comes to production time and quality of the products. 
+Their business has been very successful the last couple of years, with market shares growing. However, the last two months they have received more complaints on production time and quality of their products than usual. This is why the Six-Sigma will be employed, with the goal of resolving some of the issues. The initial project was to reduce the number of complaints from the customers, both when it comes to production time and quality of the products. 
 
 The Steering Committee estimated that the percentage of unsatisfied customers because of long production time with lower quality than expected was between 10\% and 15\%. A maximum level equal to 3\% was deemed as acceptable.
 
@@ -32,46 +33,174 @@ A team of 2 managers was launched, led by a Black Belt (BB), formed in the UPC.
 
 # Define
 
-## Project Charter
+## Clarify Purpose - Project Charter 
+![**Figure:** Final Project Charter](ProjectCharter.png)
 
 ## SIPOC
 ![**Figure:** SIPOC diagram](SIPOC_diagram-1.png)
 
-## CTx and/or VoC
-
 ## CTQ
-Critical to Quality: 
-**Fill in these according to the theory from the Beamer**
+The critical-to-quality (CTQ) target is that less than 3\% of the customers should be satisfied with the product they receive. Moreover, a critical-to-time (CTT) target is that less than 5\% of the customers should receive their product at a delayed time. 
 
 ## VoC
-Voice of Customer: 
+Using a survey published on our social media we:
+
+* Confirmed and quantified what had already been discovered
+* Found issues related to the quality of the phones (e.g. discovered general issues in quality, parts that are faulty more often than others, issues in packaging, etc.)
+* Explored the possibility of offering additional services **(?)**
 
 ## Business Case
-The annual turnover of PhoneNow is 100,000 €.
+The annual turnover of PhoneNow digital shop is 100,000 €. 
 
-The 15\% of delayed production with 10% of discounts supposes a cost of ????
+The 15% of delayed production decreases the customer satisfaction by 20%.
 
-**Also: what about the cost of the people that get a bad quality phone!?**
+It has been estimated that clients with a customer satisfaction below 6 will not buy a phone again from the company. This client churn results in losses of 20,000 €.
 
-Estimation has been validated by the finance director.
+The estimations have been validated by the finance director. 
 
+# Measure
 
-### Order to Delivery
-We divide this process into 1) order to shipment and 2) shipment to delivery. The company only has 1) completely under control whereas 2) is given to another company.
+## Questions to Answer
+
+* How long does it take from order to shipment?
+* How long does it take from shipment to delivery?
+* How long does it take for a customer to receive his mobile device after he has finished the purchase?
+* What percentage of clients file a complaint because of defective devices?
+
+## Review Existing Data - Exploratory Data Analysis
+
+The existing data for this business is simulated. 
 
 ```{r}
+set.seed(1)
 N=1000
-# time from customer ordering to phone being ready for shipment
-t_to_ship = rexp(N,1/7) + rnorm(N,7,2)
+# Production time. 
+t_to_ship = rexp(N,1/2) + rnorm(N,15,2)
 
-#more shipment two companies are used. maybe there's a difference
-t_ship_comp1 = rexp(N/2,1/2) + rnorm(N/2,0.5,0.2)
-t_ship_comp2 = rexp(N/2,1/2.5) + rnorm(N/2,0.5,0.01)
+# Shipment time. 
+t_ship = rexp(N,1/2) + rnorm(N,5,3)
 
-total_time = t_to_ship + c(t_ship_comp1,t_ship_comp2) # company1 shipped the 1st half of phones, comp2 the 2nd
-
-hist(total_time,main="Time from order to delivery", xlab="Days", col=4)
+total_times <- t_to_ship + t_ship
+mu_tot <- mean(total_times)
+sigma_tot <- sd(total_times)
 ```
+
+We have data from `r N` customers during the last two months. The company provided us with production times and shipping times. The production times were collected by PhoneNow themselves, whereas the shipping times were collected by a third-party shipping company that PhoneNow has hired. The total time the customer has to wait for the product after placing an order is the sum of these two times. 
+
+Moreover, the business provided us with customer satisfaction data, concerning the quality of the products **Not sure how I can simulate data and check six-sigma for this process? You do this (also doing it further down)**
+
+```{r}
+hist(t_to_ship, main = "Production Times", xlab = "Production time [days]", breaks = 100)
+hist(t_ship, main = "Shipping Times", xlab = "Shipping time [days]", breaks = 100)
+hist(total_times, main = "Total Times", xlab = "Time from order to customer receives [days]", breaks = 100)
+abline(v = 30, col = "red", lty = 2)
+```
+
+A red dotted line is plotted to show where the guaranteed time is exceeded. The mean of the total time is `r round(mu_tot, 2)` and the standard error is `r round(sigma_tot,2)`.   
+
+## Control Chart
+
+We want to check if the process is out-of-control using the Six-Sigma criterion. The process is assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
+
+```{r}
+sigma_opt <- sqrt(1)
+mu_opt <- 27
+LSL <- (-6) * sigma_opt + mu_opt
+USL <- 6 * sigma_opt + mu_opt
+faults<-sum((total_times>USL)+(total_times<LSL))
+```
+
+The bounds LSL and USL in the Six-Sigma environment are calculated to being `r LSL` and `r USL`, respectively. Moreover, the number of faults in the total times is `r faults`, which means that the proportion of faults is `r round(faults/N, 2)`. Note that this shows that the estimations given by the Steering Committed from earlier are severely underestimated. This means that the observed process has `r faults/N*10^6` faults per million, i.e. it is a 2 sigma process and it is clearly out-of-control. This was determined from the Sigma Scale table. However, it can also be calculated that this is a 2 sigma process, as done in the code block below. 
+
+```{r}
+prob<-faults/N
+(k<-qnorm(1-prob,1.5,1))
+```
+
+The control chart is shown below. 
+
+```{r}
+x <- seq(min(total_times), max(total_times), length = 100)
+f1 <- dnorm(x, mean = mu_tot+1.5*sigma_tot, sd = sigma_tot)
+f2 <- dnorm(x, mean = mu_tot, sd = sigma_tot)
+hist(total_times,main = "Total Times", xlab = "Time from order to customer receives [days]", 
+     breaks = 100, probability = T)
+lines(x,f1,type="l",lwd=2,lty=2)
+lines(x,f2,type="l",lwd=2,lty=1)
+abline(v=LSL,lwd=2,lty=2)
+abline(v=USL,lwd=2,lty=2)
+
+DPMO<-1000000*(1-pnorm(USL,mu_tot+1.5*sigma_tot,sigma_tot))
+```
+
+The dotted lines vertical lines in the plot above show the bounds LSL and USL. The control chart above also clearly shows that the process is out of control, since there are times that are above USL and below LSL. Note that the times below LSL is not a problem when it comes to customer satisfaction, but it is a problem for PhoneNow, because it means that the variability in the production and shipping times is too large and they are not maximizing the potential returns in the company. The long term DPMO is `r DPMO`, which is large. 
+
+```{r}
+sigma<-(USL-mu_tot)/6
+DPMO<-1000000*(1-pnorm(USL,mu_tot+1.5*sigma,sigma))
+
+Cp_opt<-(USL-LSL)/(6*sigma_opt)
+Cp<-(USL-LSL)/(6*sigma_tot)
+```
+
+
+In order to change the process to a Six-Sigma process, we need to reduce the standard deviation of the process from `r round(sigma_tot,2)` to `r round(sigma, 2)`. Note also that the optimal production capacity index is `r Cp_opt`, whereas the observed production capacity index is only `r round(Cp,2)`.
+
+
+## Proposed Improvements
+
+* Talk to the employees: Are they overworked? Do they not enjoy their work or the workplace? Teambuilding?
+* Talk to the delivery company: Are they not doing their jobs to the best of their ability?
+* Change delivery company?
+* Change supplier of parts?
+
+
+## Collect New Data After the Proposed Improvements
+
+New data are "collected" (simulated) after testing the proposed improvements for 2 months. PhoneNow have decided to test using two different shipping companies, where they are hired to deliver half of the orders each. This is in order to mitigate the large variation seen in the shipping times from the original data. 
+
+```{r}
+set.seed(1)
+N2 = 800 # A bit fewer orders than we had during the first two months. 
+
+##### Data for production and shipping times. 
+# Production time. 
+t_to_ship_2 = rnorm(N2,23,1)
+
+# two companies are used. maybe there's a difference
+t_ship_comp1 <- rexp(N2/2,1/0.5) + rnorm(N2/2,2,1)
+t_ship_comp2 = rexp(N2/2,1/1) + rnorm(N2/2, 3,3)
+
+total_time = t_to_ship_2 + c(t_ship_comp1,t_ship_comp2) # company1 shipped the 1st half of phones, comp2 the 2nd
+
+###### Data for defective phones according to touch screen supplier.
+M = 150 #each of the 6 cells gets 150 datapoints
+# pw_11 = rbinom(M,1,0.99)
+# pw_12 = rbinom(M,1,0.98)
+# pw_21 = rbinom(M,1,0.95)
+# pw_22 = rbinom(M,1,0.96)
+# pw_31 = rbinom(M,1,0.92)
+# pw_32 = rbinom(M,1,0.93)
+```
+
+Now we have collected `r N2` orders. The new production, shipment (for both companies) and total times are shown in the histograms below. 
+
+```{r}
+hist(t_to_ship_2, main = "Production Times", xlab = "Production time [days]", breaks = 100)
+hist(t_ship_comp1, main = "Shipping Times via Company 1", xlab = "Shipping time [days]", breaks = 100)
+hist(t_ship_comp2, main = "Shipping Times via Company 2", xlab = "Shipping time [days]", breaks = 100)
+hist(total_time, main = "Total Times", xlab = "Time from order to customer receives [days]", breaks = 100)
+abline(v = 30, col = "red", lty = 2)
+```
+
+### Experiment Design - Do the Improvements Work?
+
+The experiment we are doing to test the proposed improvements work is using the two following factors
+
+* Compare delivery companies shipment-to-delivery times
+* Compare \% defective phones by different [material] supplier
+
+#### Testing Delivery Companies
 
 Let's compare both shipment companies to see if we should prefer one over the other.
 
@@ -80,9 +209,91 @@ wilcox.test(t_ship_comp1,t_ship_comp2)
 median(t_ship_comp1) < median(t_ship_comp2)
 ```
 
+In fact there is a significant difference between the delivery time of both companies. If possible, commissioning the first should be preferred. Since we had time on our hands, PhoneNow agreed to collect data for one more month after this test, only using the first shipping company in the test from above. **Does it make sense to do this?? Have a look please. If not, the code below for the chart and Six-Sigma measurements can be easily changed. **
 
-In fact there is a significant difference between the delivery time of both companies. If possible, commissioning the first should be preferred.
+```{r}
+set.seed(1)
+N3 = 1100 # A bit fewer orders than we had during the first two months. 
 
+##### Data for production and shipping times. 
+# Production time. 
+t_to_ship_3 = rnorm(N3,23,1)
+
+# two companies are used. maybe there's a difference
+t_ship_com_final <- rexp(N3/2,1/0.5) + rnorm(N3/2,2,1.5)
+
+total_time_final = t_to_ship_3 + t_ship_com_final
+mu_tot_final <- mean(total_time_final)
+sigma_tot_final <- sd(total_time_final)
+
+###### Data for defective phones according to touch screen supplier.
+M = 150 #each of the 6 cells gets 150 datapoints
+# pw_11 = rbinom(M,1,0.99)
+# pw_12 = rbinom(M,1,0.98)
+# pw_21 = rbinom(M,1,0.95)
+# pw_22 = rbinom(M,1,0.96)
+# pw_31 = rbinom(M,1,0.92)
+# pw_32 = rbinom(M,1,0.93)
+```
+
+This time, `r N3` orders were collected. The new data is visualized below. The mean of the total times is `r round(mu_tot_final, 2)` and the standard error is `r round(sigma_tot_final, 2)`.
+
+```{r}
+hist(t_to_ship_3, main = "Production Times", xlab = "Production time [days]", breaks = 100)
+hist(t_ship_com_final, main = "Shipping Times via Best Company (Company 1)", xlab = "Shipping time [days]", breaks = 100)
+hist(total_time_final, main = "Total Times", xlab = "Time from order to customer receives [days]", breaks = 100)
+abline(v = 30, col = "red", lty = 2)
+```
+
+### Does the New Process Meet the Six-Sigma Criteria?
+
+As earlier, we want to check if the process is out-of-control using the Six-Sigma criterion. The process is still assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
+
+```{r}
+faults2<-sum((total_time_final>USL)+(total_time_final<LSL))
+```
+
+The total faults in the new process, when it comes to total times, is `r faults2`, which means that the proportion of faults is `r round(faults2/N3, 2)`. This means that the observed process has `r faults2/N3*10^6` faults per million, i.e. it is a $\sim$ 4 sigma process and it is clearly out-of-control. This was determined from the Sigma Scale table. However, it can also be calculated that this is a $\sim$ 4 sigma process, as done in the code block below.  
+
+```{r}
+prob2<-faults2/N3
+(k2<-qnorm(1-prob2,1.5,1))
+```
+
+This is clearly an improvement compared to the original process, but it is still not a Six-Sigma process. The control chart is shown below. 
+
+```{r}
+x2 <- seq(min(total_time_final), max(total_time_final), length = 100)
+f11 <- dnorm(x2, mean = mu_tot_final+1.5*sigma_tot_final, sd = sigma_tot_final)
+f21 <- dnorm(x2, mean = mu_tot_final, sd = sigma_tot_final)
+hist(total_time_final,main = "Total Times", xlab = "Time from order to customer receives [days]", 
+     breaks = 100, probability = T)
+lines(x2,f11,type="l",lwd=2,lty=2)
+lines(x2,f21,type="l",lwd=2,lty=1)
+abline(v=LSL,lwd=2,lty=2)
+abline(v=USL,lwd=2,lty=2)
+
+DPMO<-1000000*(1-pnorm(USL,mu_tot_final+1.5*sigma_tot_final,sigma_tot_final))
+```
+
+The control chart above also shows that the process is out of control, since there are times that are above USL and below LSL. The long term DPMO is `r DPMO`, which is an improvement compared to earlier. 
+
+```{r}
+sigma<-(USL-mu_tot_final)/6
+DPMO<-1000000*(1-pnorm(USL,mu_tot_final+1.5*sigma,sigma))
+
+Cp_opt<-(USL-LSL)/(6*sigma_opt)
+Cp<-(USL-LSL)/(6*sigma_tot_final)
+```
+
+
+In order to change the process to a Six-Sigma process, we need to reduce the standard deviation of the process from `r round(sigma_tot_final,2)` to `r round(sigma, 2)`. Again, note that the observed production capacity index is `r round(Cp,2)`, which is an improvement compared to earlier.
+
+The conclusion is that the process of production and shipment is not a Six-Sigma after the best shipping company among two different ones was chosen. However, it is still an improvement compared to the original data, which is very important for PhoneNow. Further testing or further work with communication both internally and externally may help to reduce the standard error even more, until the process eventually reaches the goal of Six-Sigma. 
+
+# I have left this down here because I do not know how to do it. You can do it.
+
+The things concering the time is done, except for the Experiment Design (some more theory and explanations concerning that)
 
 ### Quality of Phones by 3x2 different Material Suppliers
 
@@ -112,27 +323,9 @@ for (i in 1:6){
 }
 
 ## produces NaNs bc for loop wasn't executed as intented
-#
+
+
+# ALex: I did not really understand this, so used the simle suggestion. 
 ```
 
-```{r}
-# maybe easier way to produce the data
-pw_11 = rbinom(M,1,0.99)
-pw_12 = rbinom(M,1,0.98)
-pw_21 = rbinom(M,1,0.95)
-pw_22 = rbinom(M,1,0.96)
-pw_31 = rbinom(M,1,0.92)
-pw_32 = rbinom(M,1,0.93)
-```
-
-# Measure
-
-## Questions to answer
-
-## Review existing data and validate the measurement system
-
-## Control Chart
-
-
-## Collect new data after the proposed improvements
 
