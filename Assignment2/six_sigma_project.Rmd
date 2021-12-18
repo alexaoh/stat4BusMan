@@ -300,6 +300,8 @@ The things concering the time is done, except for the Experiment Design (some mo
 The company receives the glass either from the company "Gorilla Glass", "Special Glass" or "Simple Glass" and also the touch screen technology is ordered from two different suppliers "1" and "2".
 
 ```{r}
+set.seed(420)
+
 # first simulate latent quality variables
 q_gorilla = rnorm(N,0.8,0.2)
 q_special = rnorm(N,0.85,0.1)
@@ -309,10 +311,10 @@ q_simple  = rnorm(N,0.77,0.3)
 q_touch1 = rnorm(0.9,0.11)
 q_touch2 = rnorm(0.8,0.25)
 
-for (v in c(q_gorilla,q_special,q_simple, q_touch1, q_touch2)){
-  if (v < 0) v=0
-  if (v>1) v=1
-}
+q_gorilla[q_gorilla < 0] <- q_special[q_special<0] <- q_simple[q_simple<0] <- 0
+q_gorilla[q_gorilla > 1] <- q_special[q_special>1] <- q_simple[q_simple>1] <- 1
+q_touch1[q_touch1<0] <- q_touch2[q_touch2<0] <- 0
+q_touch1[q_touch1>1] <- q_touch2[q_touch2>1] <- 1
 
 #init
 phones_working = vector('numeric',6) 
@@ -323,9 +325,36 @@ for (i in 1:6){
 }
 
 ## produces NaNs bc for loop wasn't executed as intented
+# update: fixed removal of numbers > 1 and < 0 - Rodrigo
 
 
-# ALex: I did not really understand this, so used the simle suggestion. 
+# TO DO:
+# simulate customer satisfaction
+
+# simple way
+
+#csat <- round(rnorm(N, 6, 2)) # csat: from 0-10 how satisfied are you with your product?
+#csat[csat>10] <- 10
+#csat[csat<0] <- 0
+
+
+# option b
+# simulate customer sat as a function of delivery times and glass quality
+csat.sim <- function() {
+  gorilla.sample <- sample(q_gorilla, 334)
+  special.sample <- sample(q_special, 333)
+  simple.sample <- sample(q_simple, 333)
+  df <- data.frame(list(total_t=total_times,
+                        glass=c(rep('gorilla',334), rep('special',333),rep('simple',333)),
+                        quality=c(gorilla.sample, special.sample, simple.sample)
+                        ))
+  df$csat <- -0.1*df$total_t + 10*df$quality + 1.5 # time decreases csat, quality increases it
+  df$csat <- round((df$csat / max(df$csat)) * 10)
+  df$csat[df$csat <0] <- 0
+  #summary(df$csat)
+  return(df)
+}
+
 ```
 
 
