@@ -209,7 +209,7 @@ wilcox.test(t_ship_comp1,t_ship_comp2)
 median(t_ship_comp1) < median(t_ship_comp2)
 ```
 
-In fact there is a significant difference between the delivery time of both companies. If possible, commissioning the first should be preferred. Since we had time on our hands, PhoneNow agreed to collect data for one more month after this test, only using the first shipping company in the test from above. **Does it make sense to do this?? Have a look please. If not, the code below for the chart and Six-Sigma measurements can be easily changed. **
+In fact there is a significant difference between the delivery time of both companies. If possible, commissioning the first should be preferred. Since we had time on our hands, PhoneNow agreed to collect data for one more month after this test, only using the first shipping company in the test from above. 
 
 ```{r}
 set.seed(1)
