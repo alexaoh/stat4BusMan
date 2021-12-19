@@ -173,14 +173,7 @@ t_ship_comp2 = rexp(N2/2,1/1) + rnorm(N2/2, 3,3)
 
 total_time = t_to_ship_2 + c(t_ship_comp1,t_ship_comp2) # company1 shipped the 1st half of phones, comp2 the 2nd
 
-###### Data for defective phones according to touch screen supplier.
-M = 150 #each of the 6 cells gets 150 datapoints
-# pw_11 = rbinom(M,1,0.99)
-# pw_12 = rbinom(M,1,0.98)
-# pw_21 = rbinom(M,1,0.95)
-# pw_22 = rbinom(M,1,0.96)
-# pw_31 = rbinom(M,1,0.92)
-# pw_32 = rbinom(M,1,0.93)
+
 ```
 
 Now we have collected `r N2` orders. The new production, shipment (for both companies) and total times are shown in the histograms below. 
@@ -226,14 +219,7 @@ total_time_final = t_to_ship_3 + t_ship_com_final
 mu_tot_final <- mean(total_time_final)
 sigma_tot_final <- sd(total_time_final)
 
-###### Data for defective phones according to touch screen supplier.
-M = 150 #each of the 6 cells gets 150 datapoints
-# pw_11 = rbinom(M,1,0.99)
-# pw_12 = rbinom(M,1,0.98)
-# pw_21 = rbinom(M,1,0.95)
-# pw_22 = rbinom(M,1,0.96)
-# pw_31 = rbinom(M,1,0.92)
-# pw_32 = rbinom(M,1,0.93)
+
 ```
 
 This time, `r N3` orders were collected. The new data is visualized below. The mean of the total times is `r round(mu_tot_final, 2)` and the standard error is `r round(sigma_tot_final, 2)`.
@@ -297,7 +283,13 @@ The things concering the time is done, except for the Experiment Design (some mo
 
 ### Quality of Phones by 3x2 different Material Suppliers
 
+
+
+In order to increase our market advantage, we designed a factorial experiment, in which we tested the effect of different supplier's materials on customer satisfaction.
+Specifically, the touch display technology and the display's glass processed were identified as the main factors for user experience when handling a smartphone.
 The company receives the glass either from the company "Gorilla Glass", "Special Glass" or "Simple Glass" and also the touch screen technology is ordered from two different suppliers "1" and "2".
+75 individuals were recruited to test these 2x3 combination of PhoneNow's product and rated their satisfaction with the product on a 7-point Likert Scale. We conduct a classical Analysis of Variance to analyse the effects.
+
 
 ```{r}
 set.seed(420)
@@ -357,4 +349,46 @@ csat.sim <- function() {
 
 ```
 
+
+```{r}
+set.seed(420)
+total = 75
+likert_scale = vec=c(-Inf,-30,-20,-10,10,20,30,Inf)
+
+
+s_gor_t1  = findInterval(rnorm(total,18.5,15),likert_scale)
+s_gor_t2  = findInterval(rnorm(total,27,15),likert_scale)
+s_spec_t1 = findInterval(rnorm(total,26,15),likert_scale)
+s_spec_t2 = findInterval(rnorm(total,18.5,15),likert_scale)
+s_simp_t1 = findInterval(rnorm(total,0,15),likert_scale)
+s_simp_t2 = findInterval(rnorm(total,-10,15),likert_scale)
+
+M=total
+sat = c(s_gor_t1,s_gor_t2,s_spec_t1,s_spec_t2,s_simp_t1,s_simp_t2)
+glass = c(rep(1,M),rep(1,M),rep(2,M),rep(2,M),rep(3,M),rep(3,M))
+touch = c(rep(1,M),rep(2,M),rep(1,M),rep(2,M),rep(1,M),rep(2,M))
+
+anov_data = data.frame(sat,as.factor(glass),as.factor(touch))
+colnames(anov_data) = c("satisfaction","glass","touchscreen")
+
+
+summary(aov(sat~glass*touch,data=anov_data))
+```
+As we can see both main effects for the glass and the touch screen technology processed as well as the interaction effect are statistically significant on a 5% level.
+Therefore the nullhypothesis that these differences do not exist in the population can be rejected. Let's visually see, where these difference are, in order to conclude business recommendations.
+
+
+```{r}
+library("ggpubr")
+ggboxplot(anov_data, x = "glass", y = "satisfaction", 
+          color = "touchscreen",
+          palette = c("#00AFBB", "#E7B800"),
+          xlab="Glass Supplier")
+```
+
+In terms of the glass processed, the company SimpleGlass clearly provides the worst quality and should be excluded if possible.
+Overall, GorillaGlass and SpecialGlass are of comparable quality. Interestingly, there is an interaction effect between these two glass materials and the touchscreen processed. When using GorillaGlass customers reported higher satisfaction with the product when combined with a touchscreen of company1. When using SpecialGlass, however, company2's touchscreen resulted in better average user experience.
+
+The COVID19 pandemic revealed potential supply chain risks and reminded us of the advantages of spreading risk to multiple suppliers.
+Therefore we recommend to use materials of both glass and touchscreen companies. However, we recommend to combine them in the above described optimal way.
 
