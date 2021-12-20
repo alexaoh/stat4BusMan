@@ -19,6 +19,7 @@ toc-title: Index
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = T, warning = F)
 #setwd("/home/ajo/gitRepos/stat4BusMan/Assignment2")
+library("ggpubr")
 ```
 
 # Background
@@ -85,9 +86,9 @@ mu_tot <- mean(total_times)
 sigma_tot <- sd(total_times)
 ```
 
-We have data from `r N` customers during the last two months. The company provided us with production times and shipping times. The production times were collected by PhoneNow themselves, whereas the shipping times were collected by a third-party shipping company that PhoneNow has hired. The total time the customer has to wait for the product after placing an order is the sum of these two times. 
+### Delivery Times 
 
-Moreover, the business provided us with customer satisfaction data, concerning the quality of the products **Not sure how I can simulate data and check six-sigma for this process? You do this (also doing it further down)**
+We have data from `r N` customers during the last two months. The company provided us with production times and shipping times. The production times were collected by PhoneNow themselves, whereas the shipping times were collected by a third-party shipping company that PhoneNow has hired. The total time the customer has to wait for the product after placing an order is the sum of these two times. 
 
 ```{r}
 hist(t_to_ship, main = "Production Times", xlab = "Production time [days]", breaks = 100)
@@ -98,7 +99,7 @@ abline(v = 30, col = "red", lty = 2)
 
 A red dotted line is plotted to show where the guaranteed time is exceeded. The mean of the total time is `r round(mu_tot, 2)` and the standard error is `r round(sigma_tot,2)`.   
 
-## Control Chart
+#### Control Chart
 
 We want to check if the process is out-of-control using the Six-Sigma criterion. The process is assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
 
@@ -146,6 +147,11 @@ Cp<-(USL-LSL)/(6*sigma_tot)
 
 In order to change the process to a Six-Sigma process, we need to reduce the standard deviation of the process from `r round(sigma_tot,2)` to `r round(sigma, 2)`. Note also that the optimal production capacity index is `r Cp_opt`, whereas the observed production capacity index is only `r round(Cp,2)`.
 
+### Customer Satisfaction 
+
+Moreover, the business provided us with customer satisfaction data, concerning the quality of the products **Do six-sigma for this as well! Should be able to copy most from above.**
+
+**Missing**
 
 ## Proposed Improvements
 
@@ -156,6 +162,8 @@ In order to change the process to a Six-Sigma process, we need to reduce the sta
 
 
 ## Collect New Data After the Proposed Improvements
+
+#### Delivery Times 
 
 New data are "collected" (simulated) after testing the proposed improvements for 2 months. PhoneNow have decided to test using two different shipping companies, where they are hired to deliver half of the orders each. This is in order to mitigate the large variation seen in the shipping times from the original data. 
 
@@ -186,12 +194,16 @@ hist(total_time, main = "Total Times", xlab = "Time from order to customer recei
 abline(v = 30, col = "red", lty = 2)
 ```
 
+#### Customer Satisfaction 
+
+**Missing**
+
 ### Experiment Design - Do the Improvements Work?
 
 The experiment we are doing to test the proposed improvements work is using the two following factors
 
-* Compare delivery companies shipment-to-delivery times
-* Compare \% defective phones by different [material] supplier
+1) Compare two different delivery company's shipment-to-delivery times
+2) Compare \% defective phones by different [material] supplier
 
 #### Testing Delivery Companies
 
@@ -231,59 +243,7 @@ hist(total_time_final, main = "Total Times", xlab = "Time from order to customer
 abline(v = 30, col = "red", lty = 2)
 ```
 
-### Does the New Process Meet the Six-Sigma Criteria?
-
-As earlier, we want to check if the process is out-of-control using the Six-Sigma criterion. The process is still assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
-
-```{r}
-faults2<-sum((total_time_final>USL)+(total_time_final<LSL))
-```
-
-The total faults in the new process, when it comes to total times, is `r faults2`, which means that the proportion of faults is `r round(faults2/N3, 2)`. This means that the observed process has `r faults2/N3*10^6` faults per million, i.e. it is a $\sim$ 4 sigma process and it is clearly out-of-control. This was determined from the Sigma Scale table. However, it can also be calculated that this is a $\sim$ 4 sigma process, as done in the code block below.  
-
-```{r}
-prob2<-faults2/N3
-(k2<-qnorm(1-prob2,1.5,1))
-```
-
-This is clearly an improvement compared to the original process, but it is still not a Six-Sigma process. The control chart is shown below. 
-
-```{r}
-x2 <- seq(min(total_time_final), max(total_time_final), length = 100)
-f11 <- dnorm(x2, mean = mu_tot_final+1.5*sigma_tot_final, sd = sigma_tot_final)
-f21 <- dnorm(x2, mean = mu_tot_final, sd = sigma_tot_final)
-hist(total_time_final,main = "Total Times", xlab = "Time from order to customer receives [days]", 
-     breaks = 100, probability = T)
-lines(x2,f11,type="l",lwd=2,lty=2)
-lines(x2,f21,type="l",lwd=2,lty=1)
-abline(v=LSL,lwd=2,lty=2)
-abline(v=USL,lwd=2,lty=2)
-
-DPMO<-1000000*(1-pnorm(USL,mu_tot_final+1.5*sigma_tot_final,sigma_tot_final))
-```
-
-The control chart above also shows that the process is out of control, since there are times that are above USL and below LSL. The long term DPMO is `r DPMO`, which is an improvement compared to earlier. 
-
-```{r}
-sigma<-(USL-mu_tot_final)/6
-DPMO<-1000000*(1-pnorm(USL,mu_tot_final+1.5*sigma,sigma))
-
-Cp_opt<-(USL-LSL)/(6*sigma_opt)
-Cp<-(USL-LSL)/(6*sigma_tot_final)
-```
-
-
-In order to change the process to a Six-Sigma process, we need to reduce the standard deviation of the process from `r round(sigma_tot_final,2)` to `r round(sigma, 2)`. Again, note that the observed production capacity index is `r round(Cp,2)`, which is an improvement compared to earlier.
-
-The conclusion is that the process of production and shipment is not a Six-Sigma after the best shipping company among two different ones was chosen. However, it is still an improvement compared to the original data, which is very important for PhoneNow. Further testing or further work with communication both internally and externally may help to reduce the standard error even more, until the process eventually reaches the goal of Six-Sigma. 
-
-# I have left this down here because I do not know how to do it. You can do it.
-
-The things concering the time is done, except for the Experiment Design (some more theory and explanations concerning that)
-
-### Quality of Phones by 3x2 different Material Suppliers
-
-
+#### Testing Defective Phones by 3x2 Different Material Suppliers
 
 In order to increase our market advantage, we designed a factorial experiment, in which we tested the effect of different supplier's materials on customer satisfaction.
 Specifically, the touch display technology and the display's glass processed were identified as the main factors for user experience when handling a smartphone.
@@ -379,7 +339,6 @@ Therefore the nullhypothesis that these differences do not exist in the populati
 
 
 ```{r}
-library("ggpubr")
 ggboxplot(anov_data, x = "glass", y = "satisfaction", 
           color = "touchscreen",
           palette = c("#00AFBB", "#E7B800"),
@@ -392,3 +351,54 @@ Overall, GorillaGlass and SpecialGlass are of comparable quality. Interestingly,
 The COVID19 pandemic revealed potential supply chain risks and reminded us of the advantages of spreading risk to multiple suppliers.
 Therefore we recommend to use materials of both glass and touchscreen companies. However, we recommend to combine them in the above described optimal way.
 
+### Does the New Process Meet the Six-Sigma Criteria?
+
+#### Delivery Times
+
+As earlier, we want to check if the process is out-of-control using the Six-Sigma criterion. The process is still assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
+
+```{r}
+faults2<-sum((total_time_final>USL)+(total_time_final<LSL))
+```
+
+The total faults in the new process, when it comes to total times, is `r faults2`, which means that the proportion of faults is `r round(faults2/N3, 2)`. This means that the observed process has `r faults2/N3*10^6` faults per million, i.e. it is a $\sim$ 4 sigma process and it is clearly out-of-control. This was determined from the Sigma Scale table. However, it can also be calculated that this is a $\sim$ 4 sigma process, as done in the code block below.  
+
+```{r}
+prob2<-faults2/N3
+(k2<-qnorm(1-prob2,1.5,1))
+```
+
+This is clearly an improvement compared to the original process, but it is still not a Six-Sigma process. The control chart is shown below. 
+
+```{r}
+x2 <- seq(min(total_time_final), max(total_time_final), length = 100)
+f11 <- dnorm(x2, mean = mu_tot_final+1.5*sigma_tot_final, sd = sigma_tot_final)
+f21 <- dnorm(x2, mean = mu_tot_final, sd = sigma_tot_final)
+hist(total_time_final,main = "Total Times", xlab = "Time from order to customer receives [days]", 
+     breaks = 100, probability = T)
+lines(x2,f11,type="l",lwd=2,lty=2)
+lines(x2,f21,type="l",lwd=2,lty=1)
+abline(v=LSL,lwd=2,lty=2)
+abline(v=USL,lwd=2,lty=2)
+
+DPMO<-1000000*(1-pnorm(USL,mu_tot_final+1.5*sigma_tot_final,sigma_tot_final))
+```
+
+The control chart above also shows that the process is out of control, since there are times that are above USL and below LSL. The long term DPMO is `r DPMO`, which is an improvement compared to earlier. 
+
+```{r}
+sigma<-(USL-mu_tot_final)/6
+DPMO<-1000000*(1-pnorm(USL,mu_tot_final+1.5*sigma,sigma))
+
+Cp_opt<-(USL-LSL)/(6*sigma_opt)
+Cp<-(USL-LSL)/(6*sigma_tot_final)
+```
+
+
+In order to change the process to a Six-Sigma process, we need to reduce the standard deviation of the process from `r round(sigma_tot_final,2)` to `r round(sigma, 2)`. Again, note that the observed production capacity index is `r round(Cp,2)`, which is an improvement compared to earlier.
+
+The conclusion is that the process of production and shipment is not a Six-Sigma after the best shipping company among two different ones was chosen. However, it is still an improvement compared to the original data, which is very important for PhoneNow. Further testing or further work with communication both internally and externally may help to reduce the standard error even more, until the process eventually reaches the goal of Six-Sigma. 
+
+### Customer Satisfaction Data
+
+**Missing**
