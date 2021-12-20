@@ -1,6 +1,6 @@
 # Statistical Process Control
 
-setwd("C:\\Clases\\EGE_2021_2022\\Theme III\\Practice 4_SPC")
+setwd("/home/ajo/gitRepos/stat4BusMan/Practice_SPC")
 
 #EXAMPLE 1
 # X mean chart with known target 

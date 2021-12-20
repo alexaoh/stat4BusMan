@@ -19,12 +19,13 @@ toc-title: Index
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = T, warning = F)
 #setwd("/home/ajo/gitRepos/stat4BusMan/Assignment2")
-library("ggpubr")
+library(ggpubr)
+library(qcc)
 ```
 
 # Background
 
-PhoneNow is a small technology company, especially known for producing high quality phones at a low cost. Their business strategy is based on selling good quality phones to the low-end market. In this way they avoid the large market shares of Apple and Samsung in the luxury phone market. Their main competitors are Xiaomi, Nokia and Moto, among others. Moreover, they only sell products directly from their own website, and the products are made on-demand. In this way, their business does not require large amounts of capital, since they use capital they get directly from each customer for their costs. Also, they guarantee a production (and delivery) time of maximum one month, i.e. the customer should have their phone in their hand within one month. PhoneNow also guarantees customer satisfaction when it comes to the quality of the phone; if the phone is not to the quality that the customer expects, PhoneNow will make a new phone for the respective customer. 
+PhoneNow is a small technology company, especially known for producing high quality phones at a low cost. Their business strategy is based on selling good quality phones to the low-end market. In this way they avoid the large market shares of Apple and Samsung in the luxury phone market. Their main competitors are Xiaomi, Nokia and Moto, among others. Moreover, they only sell products directly from their own website, and the products are made on-demand. In this way, their business does not require large amounts of capital, since they use capital they get directly from each customer for their costs. Also, they guarantee a production (and delivery) time of maximum 30 days, i.e. the customer should have their phone in their hand within 30 days. PhoneNow also guarantees customer satisfaction when it comes to the quality of the phone; if the phone is not to the quality that the customer expects, PhoneNow will make a new phone for the respective customer. 
 
 Their business has been very successful the last couple of years, with market shares growing. However, the last two months they have received more complaints on production time and quality of their products than usual. This is why the Six-Sigma will be employed, with the goal of resolving some of the issues. The initial project was to reduce the number of complaints from the customers, both when it comes to production time and quality of the products. 
 
@@ -41,14 +42,13 @@ A team of 2 managers was launched, led by a Black Belt (BB), formed in the UPC.
 ![**Figure:** SIPOC diagram](SIPOC_diagram-1.png)
 
 ## CTQ
-The critical-to-quality (CTQ) target is that less than 3\% of the customers should be satisfied with the product they receive. Moreover, a critical-to-time (CTT) target is that less than 5\% of the customers should receive their product at a delayed time. 
+The critical-to-quality (CTQ) target is that less than 2\% of the customers should be unsatisfied with the product they receive. Moreover, a critical-to-time (CTT) target is that less than 5\% of the customers should receive their product at a delayed time. 
 
 ## VoC
 Using a survey published on our social media we:
 
 * Confirmed and quantified what had already been discovered
 * Found issues related to the quality of the phones (e.g. discovered general issues in quality, parts that are faulty more often than others, issues in packaging, etc.)
-* Explored the possibility of offering additional services **(?)**
 
 ## Business Case
 The annual turnover of PhoneNow digital shop is 100,000 €. 
@@ -99,9 +99,9 @@ abline(v = 30, col = "red", lty = 2)
 
 A red dotted line is plotted to show where the guaranteed time is exceeded. The mean of the total time is `r round(mu_tot, 2)` and the standard error is `r round(sigma_tot,2)`.   
 
-#### Control Chart
+#### Six-Sigma Analysis and Control Chart
 
-We want to check if the process is out-of-control using the Six-Sigma criterion. The process is assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
+We want to check if the process is a Six-Sigma process. The process is assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
 
 ```{r}
 sigma_opt <- sqrt(1)
@@ -118,23 +118,24 @@ prob<-faults/N
 (k<-qnorm(1-prob,1.5,1))
 ```
 
-The control chart is shown below. 
+A visualization is shown below.  
 
-```{r}
+```{r, results="hide"}
 x <- seq(min(total_times), max(total_times), length = 100)
 f1 <- dnorm(x, mean = mu_tot+1.5*sigma_tot, sd = sigma_tot)
 f2 <- dnorm(x, mean = mu_tot, sd = sigma_tot)
-hist(total_times,main = "Total Times", xlab = "Time from order to customer receives [days]", 
+hist(total_times,main = "Total Times", xlab = "Time from order to customer receives [days]",
      breaks = 100, probability = T)
 lines(x,f1,type="l",lwd=2,lty=2)
-lines(x,f2,type="l",lwd=2,lty=1)
+lines(x,f2,type="l",lwd=2,lty=2)
 abline(v=LSL,lwd=2,lty=2)
 abline(v=USL,lwd=2,lty=2)
 
 DPMO<-1000000*(1-pnorm(USL,mu_tot+1.5*sigma_tot,sigma_tot))
+
 ```
 
-The dotted lines vertical lines in the plot above show the bounds LSL and USL. The control chart above also clearly shows that the process is out of control, since there are times that are above USL and below LSL. Note that the times below LSL is not a problem when it comes to customer satisfaction, but it is a problem for PhoneNow, because it means that the variability in the production and shipping times is too large and they are not maximizing the potential returns in the company. The long term DPMO is `r DPMO`, which is large. 
+The dotted vertical lines in the plot above show the bounds LSL and USL. The control chart above also clearly shows that the process is not Six-Sigma, since there are times that are above USL and below LSL. Note that the times below LSL is not a problem when it comes to customer satisfaction, but it is a problem for PhoneNow, because it means that the variability in the production and shipping times is too large and they are not maximizing the potential returns in the company. The long term DPMO is `r DPMO`, which is large. 
 
 ```{r}
 sigma<-(USL-mu_tot)/6
@@ -144,8 +145,16 @@ Cp_opt<-(USL-LSL)/(6*sigma_opt)
 Cp<-(USL-LSL)/(6*sigma_tot)
 ```
 
-
 In order to change the process to a Six-Sigma process, we need to reduce the standard deviation of the process from `r round(sigma_tot,2)` to `r round(sigma, 2)`. Note also that the optimal production capacity index is `r Cp_opt`, whereas the observed production capacity index is only `r round(Cp,2)`.
+
+Next we want to see if the process is out-of-control according to a Six-Sigma criterion. Below, two different X Control Charts are plotted. The first shows the X Chart when we assume the same optimal process as above, $N(27, 1)$. The second X Chart is a chart where we assume that the target values are not known (which is more general than assuming the optimal normal process). The first 300 data points are used to estimate the mean and the standard deviation of the process, while the remaining 700 data points are used to measure the process. Both the charts have Six-Sigma upper and lower limits. 
+
+```{r, results = "hide"}
+qcc(total_times, type = "xbar.one", center = 27, std.dev = 1, nsigma = 6)
+qcc(total_times[1:300], type = "xbar.one", newdata = total_times[301:length(total_times)], nsigmas = 6)
+```
+
+From the first chart we gain the same conclusion as earlier, namely that the process is quite clearly out-of-control with the Six-Sigma criterion. However, the second chart shows that the process is not out-of-control when not assuming an optimal distribution of the data. Perhaps this second approach indeed would make more sense, because what is the reason for the assumed optimal process? How can one know that the times should be distributed this way? In most cases one could not know this. Despite the slightly artificial definition of the optimal process as $N(27, 1)$, we will study this on new data after some proposed improvements also, as a way to quantify if the process has been improved, i.e. if the process has become more similar to the optimal process or not. Lastly, we would argue that the optimal process we have defined is in fact a very good distribution of times, because we know that $99.7\%$ of all data from a normal distribution lies within 3 standard deviations of the mean, which for the optimal process would mean that (for many customers) only $0.3\%$ of the customers get their phone too late, while PhoneNow can deliver their phones as late as possible before the guarantee of 30 days is violated, saving them costs as well. Perhaps the optimal process is a bit optimistic, but it is still a reasonable goal to work towards for the company. 
 
 ### Customer Satisfaction 
 
@@ -355,20 +364,20 @@ Therefore we recommend to use materials of both glass and touchscreen companies.
 
 #### Delivery Times
 
-As earlier, we want to check if the process is out-of-control using the Six-Sigma criterion. The process is still assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
+As earlier, we want to check if the process is Six-Sigma and if it is out-of-control using the Six-Sigma criterion. The process is still assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
 
 ```{r}
 faults2<-sum((total_time_final>USL)+(total_time_final<LSL))
 ```
 
-The total faults in the new process, when it comes to total times, is `r faults2`, which means that the proportion of faults is `r round(faults2/N3, 2)`. This means that the observed process has `r faults2/N3*10^6` faults per million, i.e. it is a $\sim$ 4 sigma process and it is clearly out-of-control. This was determined from the Sigma Scale table. However, it can also be calculated that this is a $\sim$ 4 sigma process, as done in the code block below.  
+Here we use the final data with 1100 orders, where only the delivery company that was judged as the best was used. The total faults in the new process, when it comes to total times, is `r faults2`, which means that the proportion of faults is `r round(faults2/N3, 2)`. This means that the observed process has `r faults2/N3*10^6` faults per million, i.e. it is a $\sim$ 4 sigma process and it is clearly out-of-control. This was determined from the Sigma Scale table. However, it can also be calculated that this is a $\sim$ 4 sigma process, as done in the code block below.  
 
 ```{r}
 prob2<-faults2/N3
 (k2<-qnorm(1-prob2,1.5,1))
 ```
 
-This is clearly an improvement compared to the original process, but it is still not a Six-Sigma process. The control chart is shown below. 
+This is clearly an improvement compared to the original process, but it is still not a Six-Sigma process. A visualization is given below. 
 
 ```{r}
 x2 <- seq(min(total_time_final), max(total_time_final), length = 100)
@@ -384,7 +393,7 @@ abline(v=USL,lwd=2,lty=2)
 DPMO<-1000000*(1-pnorm(USL,mu_tot_final+1.5*sigma_tot_final,sigma_tot_final))
 ```
 
-The control chart above also shows that the process is out of control, since there are times that are above USL and below LSL. The long term DPMO is `r DPMO`, which is an improvement compared to earlier. 
+The visualization above also shows that the process is not Six-Sigma, since there are times that are above USL and below LSL. The long term DPMO is `r DPMO`, which is an improvement compared to earlier. 
 
 ```{r}
 sigma<-(USL-mu_tot_final)/6
@@ -394,8 +403,16 @@ Cp_opt<-(USL-LSL)/(6*sigma_opt)
 Cp<-(USL-LSL)/(6*sigma_tot_final)
 ```
 
-
 In order to change the process to a Six-Sigma process, we need to reduce the standard deviation of the process from `r round(sigma_tot_final,2)` to `r round(sigma, 2)`. Again, note that the observed production capacity index is `r round(Cp,2)`, which is an improvement compared to earlier.
+
+As before collecting new data, two control charts are plotted, in order to check if the process is out-of-control. 
+
+```{r, results = "hide"}
+qcc(total_time_final, type = "xbar.one", center = 27, std.dev = 1, nsigma = 6)
+qcc(total_time_final[1:300], type = "xbar.one", newdata = total_time_final[301:length(total_time_final)], nsigmas = 6)
+```
+
+The first control chart shows fewer points beyond the limits, but a larger number of violating runs. It is not clear why this is the case, but it should be investigated further. In the second control chart, there are still no points beyond the limits, and the number of violating runs are fewer than earlier. Also, it is apparent that the estimated center and standard deviation of the process is closer to the optimal process, which means that the improvements have worked, at least when the goal is to make the process more similar to a $N(27,1)$.
 
 The conclusion is that the process of production and shipment is not a Six-Sigma after the best shipping company among two different ones was chosen. However, it is still an improvement compared to the original data, which is very important for PhoneNow. Further testing or further work with communication both internally and externally may help to reduce the standard error even more, until the process eventually reaches the goal of Six-Sigma. 
 

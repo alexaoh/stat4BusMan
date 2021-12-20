@@ -1,6 +1,6 @@
 # Multifactor Experiments
 
-setwd("C:\\Clases\\EGE_2021_2022\\Theme IV\\Practice")
+setwd("/home/ajo/gitRepos/stat4BusMan/PracticeExpDesign")
 rm(list=ls())
 
 
@@ -23,6 +23,7 @@ fit=aov(y~A*B); anova(fit)
 
 TukeyHSD(fit)
 
+plot(TukeyHSD(fit))
 # Testing de Validity of Assumptions
 
 # R Command for Testing the Homoscedasticity Assumption
