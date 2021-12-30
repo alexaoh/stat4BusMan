@@ -3,9 +3,10 @@ title: "Six-Sigma Project: Production of phones at PhoneNow"
 author: "Alexander, Rodrigo and Johannes"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  pdf_document:
-    toc: yes
-    toc_depth: 2
+  # pdf_document:
+  #   toc: yes
+  #   toc_depth: 2
+  #   number_sections: yes
   html_document:
     code_folding: hide
     fig_caption: yes
@@ -36,10 +37,10 @@ A team of 2 managers was launched, led by a Black Belt (BB), formed in the UPC.
 # Define
 
 ## Clarify Purpose - Project Charter 
-![**Figure:** Final Project Charter](ProjectCharter.png)
+![Final Project Charter](ProjectCharter.png)
 
 ## SIPOC
-![**Figure:** SIPOC diagram](SIPOC_diagram-1.png)
+![SIPOC diagram](SIPOC_diagram-1.png)
 
 ## CTQ
 The critical-to-quality (CTQ) target is that less than 2\% of the customers should be unsatisfied with the product they receive. Moreover, a critical-to-time (CTT) target is that less than 5\% of the customers should receive their product at a delayed time. 
@@ -132,14 +133,16 @@ abline(v=LSL,lwd=2,lty=2)
 abline(v=USL,lwd=2,lty=2)
 
 DPMO<-1000000*(1-pnorm(USL,mu_tot+1.5*sigma_tot,sigma_tot))
-
+DPMO
 ```
 
 The dotted vertical lines in the plot above show the bounds LSL and USL. The control chart above also clearly shows that the process is not Six-Sigma, since there are times that are above USL and below LSL. Note that the times below LSL is not a problem when it comes to customer satisfaction, but it is a problem for PhoneNow, because it means that the variability in the production and shipping times is too large and they are not maximizing the potential returns in the company. The long term DPMO is `r DPMO`, which is large. 
 
 ```{r}
 sigma<-(USL-mu_tot)/6
+sigma
 DPMO<-1000000*(1-pnorm(USL,mu_tot+1.5*sigma,sigma))
+DPMO
 
 Cp_opt<-(USL-LSL)/(6*sigma_opt)
 Cp<-(USL-LSL)/(6*sigma_tot)
@@ -160,48 +163,47 @@ From the first chart we gain the same conclusion as earlier, namely that the pro
 
 In discussion between managers and statisticians it was defined that satisfaction should be measured between zero and one hundred. 
 Through an online tool recent customers were asked to provide their satisfaction assessment to various items, whose scores where then averaged. This average justifies the choice of a normal distribution via the central limit theorem.
-The managers defined the customer satisfaction as acceptable when it is distributed as $N(80, 15)$.
+The managers defined the customer satisfaction as acceptable when it is distributed as $N(80, 10)$.
 Below the observed satisfaction data is displayed.
 
 
 ```{r}
 set.seed(2022)
-sigma_opt <- sqrt(10)
-mu_opt <- 80
-LSL <- (-6) * sigma_opt + mu_opt
-N=500
+sigma_optj <- sqrt(10)
+mu_optj <- 80
+LSL2 <- (-6) * sigma_optj + mu_optj
+Nj=500
 satisfaction = rnorm(N,80-3,sqrt(10)+2+rnorm(1,0,2))
 satisfaction[satisfaction>100]=runif(1,90,100)
-faults<-sum((satisfaction<LSL))
-faults/N
+faultsj<-sum((satisfaction<LSL2))
+faultsj
+faultsj/Nj
 ```
 
-For satisfaction, obviously, only a lower bound LSL can be defined, because exceeding the threshold is not a bad thing. It is estimated as `r LSL`.
-Thereby, a proportion of `r round(faults/N, 2)` is observed. Per million parts this gives `r faults/N*10^6`, which means the process is out of control.
+For satisfaction, obviously, only a lower bound LSL can be defined, because exceeding the threshold is not a bad thing. It is estimated as `r LSL2`.
+Thereby, a proportion of `r round(faultsj/Nj, 3)` is observed. Per million parts this gives `r faultsj/Nj*10^6`, which means the process is out of control.
 In fact it is a 4-sigma process.
 ```{r}
-prob<-faults/N
-(k<-qnorm(1-prob,1.5,1))
+probj<-faultsj/Nj
+(kj<-qnorm(1-probj,1.5,1))
 ```
 
 A visualization is shown below.  
 
 ```{r, results="hide"}
-x <- seq(min(satisfaction), max(satisfaction), length = 100)
-f1 <- dnorm(x, mean = mean(satisfaction), sd = sqrt(var(satisfaction)))
-f2 <- dnorm(x, mean = mu_opt, sd = sigma_opt)
+mu2 <- mean(satisfaction)
+sigma2 <- sd(satisfaction)
+xj <- seq(min(satisfaction), max(satisfaction), length = 100)
+f1j <- dnorm(xj, mean = mu_optj, sd = sigma_optj)
+f2j <- dnorm(xj, mean = mu2, sd = sigma2)
 hist(satisfaction,main = "Histogram of Customer Satisfaction", xlab = "Satisfaction [1-100]",
      breaks = 100, probability = T)
-lines(x,f1,type="l",lwd=2,lty=2)
-lines(x,f2,type="l",lwd=2,lty=1)
-abline(v=LSL,lwd=2,lty=2)
-
-DPMO<-1000000*(1-pnorm(USL,mu_tot+1.5*sigma_tot,sigma_tot))
-
+lines(xj,f1j,type="l",lwd=2,lty=1)
+lines(xj,f2j,type="l",lwd=2,lty=2)
+abline(v=LSL2,lwd=2,lty=2)
 ```
-The dotted vertical lines shows the threshold under which a customer satisfaction is considered as a fault. In fact only four faults are observed.
-The dotted gaussian is the observed process and the steeper, black gaussian is the optimal process which should be achieved. We can see that both the mean is clearly too low and the variance is slightly too large.
 
+The dotted vertical lines show the threshold under which a customer satisfaction is considered as a fault. In fact only `r faultsj` faults are observed. The thick Gaussian shows the optimal process, while the dotted Gaussian shows the normal distribution with parameters estimated from the data. It is apparent that the process is very different from the optimal Gaussian process. 
 
 ## Proposed Improvements
 
@@ -213,7 +215,7 @@ The dotted gaussian is the observed process and the steeper, black gaussian is t
 
 ## Collect New Data After the Proposed Improvements
 
-#### Delivery Times 
+### Delivery Times 
 
 New data are "collected" (simulated) after testing the proposed improvements for 2 months. PhoneNow have decided to test using two different shipping companies, where they are hired to deliver half of the orders each. This is in order to mitigate the large variation seen in the shipping times from the original data. 
 
@@ -229,7 +231,8 @@ t_to_ship_2 = rnorm(N2,23,1)
 t_ship_comp1 <- rexp(N2/2,1/0.5) + rnorm(N2/2,2,1)
 t_ship_comp2 = rexp(N2/2,1/1) + rnorm(N2/2, 3,3)
 
-total_time = t_to_ship_2 + c(t_ship_comp1,t_ship_comp2) # company1 shipped the 1st half of phones, comp2 the 2nd
+total_time = t_to_ship_2 + c(t_ship_comp1,t_ship_comp2) 
+# company1 shipped the 1st half of phones, comp2 the 2nd
 
 
 ```
@@ -277,8 +280,6 @@ t_ship_com_final <- rexp(N3/2,1/0.5) + rnorm(N3/2,2,1.5)
 total_time_final = t_to_ship_3 + t_ship_com_final
 mu_tot_final <- mean(total_time_final)
 sigma_tot_final <- sd(total_time_final)
-
-
 ```
 
 This time, `r N3` orders were collected. The new data is visualized below. The mean of the total times is `r round(mu_tot_final, 2)` and the standard error is `r round(sigma_tot_final, 2)`.
@@ -414,6 +415,7 @@ abline(v=LSL,lwd=2,lty=2)
 abline(v=USL,lwd=2,lty=2)
 
 DPMO<-1000000*(1-pnorm(USL,mu_tot_final+1.5*sigma_tot_final,sigma_tot_final))
+DPMO
 ```
 
 The visualization above also shows that the process is not Six-Sigma, since there are times that are above USL and below LSL. The long term DPMO is `r DPMO`, which is an improvement compared to earlier. 
@@ -421,6 +423,7 @@ The visualization above also shows that the process is not Six-Sigma, since ther
 ```{r}
 sigma<-(USL-mu_tot_final)/6
 DPMO<-1000000*(1-pnorm(USL,mu_tot_final+1.5*sigma,sigma))
+DPMO
 
 Cp_opt<-(USL-LSL)/(6*sigma_opt)
 Cp<-(USL-LSL)/(6*sigma_tot_final)
@@ -437,38 +440,33 @@ qcc(total_time_final[1:300], type = "xbar.one", newdata = total_time_final[301:l
 
 The first control chart shows fewer points beyond the limits, but a larger number of violating runs. It is not clear why this is the case, but it should be investigated further. In the second control chart, there are still no points beyond the limits, and the number of violating runs are fewer than earlier. Also, it is apparent that the estimated center and standard deviation of the process is closer to the optimal process, which means that the improvements have worked, at least when the goal is to make the process more similar to a $N(27,1)$.
 
-The conclusion is that the process of production and shipment is not a Six-Sigma after the best shipping company among two different ones was chosen. However, it is still an improvement compared to the original data, which is very important for PhoneNow. Further testing or further work with communication both internally and externally may help to reduce the standard error even more, until the process eventually reaches the goal of Six-Sigma. 
 
-### Customer Satisfaction Data
+#### Customer Satisfaction Data
 
 Customer Satisfaction was again measured after all improvement raised in this report were implemented.
 
 ```{r}
 set.seed(4)
-sigma_opt <- sqrt(10)
-mu_opt <- 80
-LSL <- (-6) * sigma_opt + mu_opt
-N=500
-satisfaction = rnorm(N,80-rnorm(1,-1,1),sqrt(10)+runif(1,0,2))
+satisfaction = rnorm(Nj,80-rnorm(1,-1,1),sqrt(10)+runif(1,0,2))
 satisfaction[satisfaction>100]=runif(1,90,100)
-faults<-sum((satisfaction<LSL))
-faults/N
+faultsj<-sum((satisfaction<LSL2))
+faultsj/Nj
 ```
 
 In fact in this data from 500 customers zero faults are observed. Let's visualize the process compared to the optimal one.
 
 
 ```{r, results="hide"}
-x <- seq(min(satisfaction), max(satisfaction), length = 100)
-f1 <- dnorm(x, mean = mean(satisfaction), sd = sqrt(var(satisfaction)))
-f2 <- dnorm(x, mean = mu_opt, sd = sigma_opt)
+mu2 <- mean(satisfaction)
+sigma2 <- sd(satisfaction)
+xj <- seq(min(satisfaction), max(satisfaction), length = 100)
+f1j <- dnorm(xj, mean = mu_optj, sd = sigma_optj)
+f2j <- dnorm(xj, mean = mu2, sd = sigma2)
 hist(satisfaction,main = "Histogram of Customer Satisfaction after Improvements", xlab = "Satisfaction [1-100]",
      breaks = 100, probability = T)
-lines(x,f1,type="l",lwd=2,lty=2)
-lines(x,f2,type="l",lwd=2,lty=1)
-abline(v=LSL,lwd=2,lty=2)
-
-DPMO<-1000000*(1-pnorm(USL,mu_tot+1.5*sigma_tot,sigma_tot))
-
+lines(xj,f1j,type="l",lwd=2,lty=1)
+lines(xj,f2j,type="l",lwd=2,lty=2)
+abline(v=LSL2,lwd=2,lty=2)
 ```
-The observed process does not perfectly match the optimal one, but is very close. The variance is still slithly bigger, the mean is in fact higher than it was defined by managers in the beginning.
+
+The observed process does not perfectly match the optimal one, but it is very close. The variance is still slightly bigger, while the mean is smaller than it was defined by managers in the beginning.
