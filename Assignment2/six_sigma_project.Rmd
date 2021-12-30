@@ -3,14 +3,14 @@ title: "Six-Sigma Project: Production of phones at PhoneNow"
 author: "Alexander, Rodrigo and Johannes"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
+  pdf_document:
+    toc: yes
+    toc_depth: 2
   html_document:
     code_folding: hide
     fig_caption: yes
     include:
     number_sections: yes
-    toc: yes
-    toc_depth: 2
-  pdf_document:
     toc: yes
     toc_depth: 2
 toc-title: Index
@@ -158,13 +158,54 @@ From the first chart we gain the same conclusion as earlier, namely that the pro
 
 ### Customer Satisfaction 
 
-Moreover, the business provided us with customer satisfaction data, concerning the quality of the products **Do six-sigma for this as well! Should be able to copy most from above.**
+In discussion between managers and statisticians it was defined that satisfaction should be measured between zero and one hundred. 
+Through an online tool recent customers were asked to provide their satisfaction assessment to various items, whose scores where then averaged. This average justifies the choice of a normal distribution via the central limit theorem.
+The managers defined the customer satisfaction as acceptable when it is distributed as $N(80, 15)$.
+Below the observed satisfaction data is displayed.
 
-**Missing**
+
+```{r}
+set.seed(2022)
+sigma_opt <- sqrt(10)
+mu_opt <- 80
+LSL <- (-6) * sigma_opt + mu_opt
+N=500
+satisfaction = rnorm(N,80-3,sqrt(10)+2+rnorm(1,0,2))
+satisfaction[satisfaction>100]=runif(1,90,100)
+faults<-sum((satisfaction<LSL))
+faults/N
+```
+
+For satisfaction, obviously, only a lower bound LSL can be defined, because exceeding the threshold is not a bad thing. It is estimated as `r LSL`.
+Thereby, a proportion of `r round(faults/N, 2)` is observed. Per million parts this gives `r faults/N*10^6`, which means the process is out of control.
+In fact it is a 4-sigma process.
+```{r}
+prob<-faults/N
+(k<-qnorm(1-prob,1.5,1))
+```
+
+A visualization is shown below.  
+
+```{r, results="hide"}
+x <- seq(min(satisfaction), max(satisfaction), length = 100)
+f1 <- dnorm(x, mean = mean(satisfaction), sd = sqrt(var(satisfaction)))
+f2 <- dnorm(x, mean = mu_opt, sd = sigma_opt)
+hist(satisfaction,main = "Histogram of Customer Satisfaction", xlab = "Satisfaction [1-100]",
+     breaks = 100, probability = T)
+lines(x,f1,type="l",lwd=2,lty=2)
+lines(x,f2,type="l",lwd=2,lty=1)
+abline(v=LSL,lwd=2,lty=2)
+
+DPMO<-1000000*(1-pnorm(USL,mu_tot+1.5*sigma_tot,sigma_tot))
+
+```
+The dotted vertical lines shows the threshold under which a customer satisfaction is considered as a fault. In fact only four faults are observed.
+The dotted gaussian is the observed process and the steeper, black gaussian is the optimal process which should be achieved. We can see that both the mean is clearly too low and the variance is slightly too large.
+
 
 ## Proposed Improvements
 
-* Talk to the employees: Are they overworked? Do they not enjoy their work or the workplace? Teambuilding?
+* Talk to the employees: Are they overworked? Do they not enjoy their work or the workplace? Team building?
 * Talk to the delivery company: Are they not doing their jobs to the best of their ability?
 * Change delivery company?
 * Change supplier of parts?
@@ -203,9 +244,6 @@ hist(total_time, main = "Total Times", xlab = "Time from order to customer recei
 abline(v = 30, col = "red", lty = 2)
 ```
 
-#### Customer Satisfaction 
-
-**Missing**
 
 ### Experiment Design - Do the Improvements Work?
 
@@ -285,21 +323,6 @@ for (i in 1:6){
   phones_working = sum( rbinom(M,1,q_touch1[1:M]) * rbinom(M,1,q_gorilla[1:M]))
 }
 
-## produces NaNs bc for loop wasn't executed as intented
-# update: fixed removal of numbers > 1 and < 0 - Rodrigo
-
-
-# TO DO:
-# simulate customer satisfaction
-
-# simple way
-
-#csat <- round(rnorm(N, 6, 2)) # csat: from 0-10 how satisfied are you with your product?
-#csat[csat>10] <- 10
-#csat[csat<0] <- 0
-
-
-# option b
 # simulate customer sat as a function of delivery times and glass quality
 csat.sim <- function() {
   gorilla.sample <- sample(q_gorilla, 334)
@@ -418,4 +441,34 @@ The conclusion is that the process of production and shipment is not a Six-Sigma
 
 ### Customer Satisfaction Data
 
-**Missing**
+Customer Satisfaction was again measured after all improvement raised in this report were implemented.
+
+```{r}
+set.seed(4)
+sigma_opt <- sqrt(10)
+mu_opt <- 80
+LSL <- (-6) * sigma_opt + mu_opt
+N=500
+satisfaction = rnorm(N,80-rnorm(1,-1,1),sqrt(10)+runif(1,0,2))
+satisfaction[satisfaction>100]=runif(1,90,100)
+faults<-sum((satisfaction<LSL))
+faults/N
+```
+
+In fact in this data from 500 customers zero faults are observed. Let's visualize the process compared to the optimal one.
+
+
+```{r, results="hide"}
+x <- seq(min(satisfaction), max(satisfaction), length = 100)
+f1 <- dnorm(x, mean = mean(satisfaction), sd = sqrt(var(satisfaction)))
+f2 <- dnorm(x, mean = mu_opt, sd = sigma_opt)
+hist(satisfaction,main = "Histogram of Customer Satisfaction after Improvements", xlab = "Satisfaction [1-100]",
+     breaks = 100, probability = T)
+lines(x,f1,type="l",lwd=2,lty=2)
+lines(x,f2,type="l",lwd=2,lty=1)
+abline(v=LSL,lwd=2,lty=2)
+
+DPMO<-1000000*(1-pnorm(USL,mu_tot+1.5*sigma_tot,sigma_tot))
+
+```
+The observed process does not perfectly match the optimal one, but is very close. The variance is still slithly bigger, the mean is in fact higher than it was defined by managers in the beginning.
