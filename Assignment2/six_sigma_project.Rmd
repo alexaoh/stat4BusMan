@@ -3,9 +3,6 @@ title: "Six-Sigma Project: Production of phones at PhoneNow"
 author: "Alexander, Rodrigo and Johannes"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  pdf_document:
-    toc: yes
-    toc_depth: 2
   html_document:
     code_folding: hide
     fig_caption: yes
@@ -13,6 +10,10 @@ output:
     number_sections: yes
     toc: yes
     toc_depth: 2
+  pdf_document:
+    toc: yes
+    toc_depth: 2
+    number_sections: yes
 toc-title: Index
 ---
 
@@ -33,18 +34,20 @@ The Steering Committee estimated that the percentage of unsatisfied customers be
 
 A team of 2 managers was launched, led by a Black Belt (BB), formed in the UPC.
 
-# Define
+# Definition
 
-## Clarify Purpose - Project Charter 
+## Project Charter 
 ![**Figure:** Final Project Charter](ProjectCharter.png)
 
-## SIPOC
+## SIPOC scheme
 ![**Figure:** SIPOC diagram](SIPOC_diagram-1.png)
 
-## CTQ
+## CTx
+
+### CTQ
 The critical-to-quality (CTQ) target is that less than 2\% of the customers should be unsatisfied with the product they receive. Moreover, a critical-to-time (CTT) target is that less than 5\% of the customers should receive their product at a delayed time. 
 
-## VoC
+### VoC
 Using a survey published on our social media we:
 
 * Confirmed and quantified what had already been discovered
@@ -101,17 +104,18 @@ A red dotted line is plotted to show where the guaranteed time is exceeded. The 
 
 #### Six-Sigma Analysis and Control Chart
 
-We want to check if the process is a Six-Sigma process. The process is assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
+We want to check if the process is a Six-Sigma process. The process is assumed to be optimal if the total time until the customer receives the product is distributed as $N(25, 1)$. 
 
 ```{r}
 sigma_opt <- sqrt(1)
-mu_opt <- 27
+mu_opt <- 25
 LSL <- (-6) * sigma_opt + mu_opt
 USL <- 6 * sigma_opt + mu_opt
-faults<-sum((total_times>USL)+(total_times<LSL))
+faults<-sum(total_times>USL) ##+(total_times<LSL))
 ```
 
-The bounds LSL and USL in the Six-Sigma environment are calculated to being `r LSL` and `r USL`, respectively. Moreover, the number of faults in the total times is `r faults`, which means that the proportion of faults is `r round(faults/N, 2)`. Note that this shows that the estimations given by the Steering Committed from earlier are severely underestimated. This means that the observed process has `r faults/N*10^6` faults per million, i.e. it is a 2 sigma process and it is clearly out-of-control. This was determined from the Sigma Scale table. However, it can also be calculated that this is a 2 sigma process, as done in the code block below. 
+The bounds LSL and USL in the Six-Sigma environment are calculated to being `r LSL` and `r USL`, respectively.
+However we do not take into account the orders that are delivered before the LSL value, since this would actually be better for the customer. Therefore, the number of faults in the total times is `r faults`, which means that the proportion of faults is `r round(faults/N, 2)`. Note that this shows that the estimations given by the Steering Committed from earlier are severely underestimated. This means that the observed process has `r faults/N*10^6` faults per million, i.e. it is a 2 sigma process and it is clearly out-of-control. This was determined from the Sigma Scale table. However, it can also be calculated that this is a 2 sigma process, as done in the code block below. 
 
 ```{r}
 prob<-faults/N
@@ -179,6 +183,7 @@ faults/N
 For satisfaction, obviously, only a lower bound LSL can be defined, because exceeding the threshold is not a bad thing. It is estimated as `r LSL`.
 Thereby, a proportion of `r round(faults/N, 2)` is observed. Per million parts this gives `r faults/N*10^6`, which means the process is out of control.
 In fact it is a 4-sigma process.
+
 ```{r}
 prob<-faults/N
 (k<-qnorm(1-prob,1.5,1))
@@ -207,8 +212,8 @@ The dotted gaussian is the observed process and the steeper, black gaussian is t
 
 * Talk to the employees: Are they overworked? Do they not enjoy their work or the workplace? Team building?
 * Talk to the delivery company: Are they not doing their jobs to the best of their ability?
-* Change delivery company?
-* Change supplier of parts?
+* Change delivery company
+* Change supplier of parts
 
 
 ## Collect New Data After the Proposed Improvements
@@ -245,14 +250,14 @@ abline(v = 30, col = "red", lty = 2)
 ```
 
 
-### Experiment Design - Do the Improvements Work?
+# Experiment Design - Do the Improvements Work?
 
 The experiment we are doing to test the proposed improvements work is using the two following factors
 
 1) Compare two different delivery company's shipment-to-delivery times
-2) Compare \% defective phones by different [material] supplier
+2) Compare \% defective phones by different screen glass supplier
 
-#### Testing Delivery Companies
+## Testing Delivery Companies
 
 Let's compare both shipment companies to see if we should prefer one over the other.
 
@@ -290,7 +295,7 @@ hist(total_time_final, main = "Total Times", xlab = "Time from order to customer
 abline(v = 30, col = "red", lty = 2)
 ```
 
-#### Testing Defective Phones by 3x2 Different Material Suppliers
+## Testing Defective Phones by 3x2 Different Material Suppliers
 
 In order to increase our market advantage, we designed a factorial experiment, in which we tested the effect of different supplier's materials on customer satisfaction.
 Specifically, the touch display technology and the display's glass processed were identified as the main factors for user experience when handling a smartphone.
@@ -366,8 +371,9 @@ colnames(anov_data) = c("satisfaction","glass","touchscreen")
 
 summary(aov(sat~glass*touch,data=anov_data))
 ```
+
 As we can see both main effects for the glass and the touch screen technology processed as well as the interaction effect are statistically significant on a 5% level.
-Therefore the nullhypothesis that these differences do not exist in the population can be rejected. Let's visually see, where these difference are, in order to conclude business recommendations.
+Therefore the null hypothesis that these differences do not exist in the population can be rejected. Let's visually see, where these difference are, in order to conclude business recommendations.
 
 
 ```{r}
@@ -383,9 +389,9 @@ Overall, GorillaGlass and SpecialGlass are of comparable quality. Interestingly,
 The COVID19 pandemic revealed potential supply chain risks and reminded us of the advantages of spreading risk to multiple suppliers.
 Therefore we recommend to use materials of both glass and touchscreen companies. However, we recommend to combine them in the above described optimal way.
 
-### Does the New Process Meet the Six-Sigma Criteria?
+# Does the New Process Meet the Six-Sigma Criteria?
 
-#### Delivery Times
+## Delivery Times
 
 As earlier, we want to check if the process is Six-Sigma and if it is out-of-control using the Six-Sigma criterion. The process is still assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
 
@@ -439,7 +445,7 @@ The first control chart shows fewer points beyond the limits, but a larger numbe
 
 The conclusion is that the process of production and shipment is not a Six-Sigma after the best shipping company among two different ones was chosen. However, it is still an improvement compared to the original data, which is very important for PhoneNow. Further testing or further work with communication both internally and externally may help to reduce the standard error even more, until the process eventually reaches the goal of Six-Sigma. 
 
-### Customer Satisfaction Data
+## Customer Satisfaction Data
 
 Customer Satisfaction was again measured after all improvement raised in this report were implemented.
 
@@ -471,4 +477,15 @@ abline(v=LSL,lwd=2,lty=2)
 DPMO<-1000000*(1-pnorm(USL,mu_tot+1.5*sigma_tot,sigma_tot))
 
 ```
-The observed process does not perfectly match the optimal one, but is very close. The variance is still slithly bigger, the mean is in fact higher than it was defined by managers in the beginning.
+
+The observed process does not perfectly match the optimal one, but is very close. The variance is still slightly bigger, the mean is in fact higher than it was defined by managers in the beginning.
+
+# End -  Further analysis
+
+By selecting only one company for the phone shipments and one material supplier the following aspects remain to be considered:
+
++ Delivery company 1 is a bit more costly, as well as the selected screen glass supplier.
++ With the improved customer satisfaction, the sales are expected to increase significantly.
++ This still to be confirmed increase of sales should surpass greatly the increased cost of the abovementioned changes in delivery and screen glass supplier companies.
+
+A further analysis is scheduled in 6 months after the implementation of the changes, to confirm and assess the success of the applied six sigma methodology. 
