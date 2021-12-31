@@ -105,11 +105,11 @@ A red dotted line is plotted to show where the guaranteed time is exceeded. The 
 
 #### Six-Sigma Analysis and Control Chart
 
-We want to check if the process is a Six-Sigma process. The process is assumed to be optimal if the total time until the customer receives the product is distributed as $N(25, 1)$. 
+We want to check if the process is a Six-Sigma process. The process is assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
 
 ```{r}
 sigma_opt <- sqrt(1)
-mu_opt <- 25
+mu_opt <- 27
 LSL <- (-6) * sigma_opt + mu_opt
 USL <- 6 * sigma_opt + mu_opt
 faults<-sum((total_times>USL)+(total_times<LSL))
@@ -153,14 +153,14 @@ Cp<-(USL-LSL)/(6*sigma_tot)
 
 In order to change the process to a Six-Sigma process, we need to reduce the standard deviation of the process from `r round(sigma_tot,2)` to `r round(sigma, 2)`. Note also that the optimal production capacity index is `r Cp_opt`, whereas the observed production capacity index is only `r round(Cp,2)`.
 
-Next we want to see if the process is out-of-control according to a Six-Sigma criterion. Below, two different X Control Charts are plotted. The first shows the X Chart when we assume the same optimal process as above, $N(25, 1)$. The second X Chart is a chart where we assume that the target values are not known (which is more general than assuming the optimal normal process). The first 300 data points are used to estimate the mean and the standard deviation of the process, while the remaining 700 data points are used to measure the process. Both the charts have Six-Sigma upper and lower limits. 
+Next we want to see if the process is out-of-control according to a Six-Sigma criterion. Below, two different X Control Charts are plotted. The first shows the X Chart when we assume the same optimal process as above, $N(27, 1)$. The second X Chart is a chart where we assume that the target values are not known (which is more general than assuming the optimal normal process). The first 300 data points are used to estimate the mean and the standard deviation of the process, while the remaining 700 data points are used to measure the process. Both the charts have Six-Sigma upper and lower limits. 
 
 ```{r, results = "hide"}
-qcc(total_times, type = "xbar.one", center = 25, std.dev = 1, nsigma = 6)
+qcc(total_times, type = "xbar.one", center = 27, std.dev = 1, nsigma = 6)
 qcc(total_times[1:300], type = "xbar.one", newdata = total_times[301:length(total_times)], nsigmas = 6)
 ```
 
-From the first chart we gain the same conclusion as earlier, namely that the process is quite clearly out-of-control with the Six-Sigma criterion. However, the second chart shows that the process is not out-of-control when not assuming an optimal distribution of the data. Perhaps this second approach indeed would make more sense, because what is the reason for the assumed optimal process? How can one know that the times should be distributed this way? In most cases one could not know this. Despite the slightly artificial definition of the optimal process as $N(25, 1)$, we will study this on new data after some proposed improvements also, as a way to quantify if the process has been improved, i.e. if the process has become more similar to the optimal process or not. Lastly, we would argue that the optimal process we have defined is in fact a very good distribution of times, because we know that $99.7\%$ of all data from a normal distribution lies within 3 standard deviations of the mean, which for the optimal process would mean that (for many customers) only $0.3\%$ of the customers get their phone too late, while PhoneNow can deliver their phones as late as possible before the guarantee of 30 days is violated, saving them costs as well. Perhaps the optimal process is a bit optimistic, but it is still a reasonable goal to work towards for the company. 
+From the first chart we gain the same conclusion as earlier, namely that the process is quite clearly out-of-control with the Six-Sigma criterion. However, the second chart shows that the process is not out-of-control when not assuming an optimal distribution of the data. Perhaps this second approach indeed would make more sense, because what is the reason for the assumed optimal process? How can one know that the times should be distributed this way? In most cases one could not know this. Despite the slightly artificial definition of the optimal process as $N(27, 1)$, we will study this on new data after some proposed improvements also, as a way to quantify if the process has been improved, i.e. if the process has become more similar to the optimal process or not. Lastly, we would argue that the optimal process we have defined is in fact a very good distribution of times, because we know that $99.7\%$ of all data from a normal distribution lies within 3 standard deviations of the mean, which for the optimal process would mean that (for many customers) only $0.3\%$ of the customers get their phone too late, while PhoneNow can deliver their phones as late as possible before the guarantee of 30 days is violated, saving them costs as well. Perhaps the optimal process is a bit optimistic, but it is still a reasonable goal to work towards for the company. 
 
 ### Customer Satisfaction 
 
@@ -184,8 +184,7 @@ faultsj/Nj
 ```
 
 For satisfaction, obviously, only a lower bound LSL can be defined, because exceeding the threshold is not a bad thing. It is estimated as `r LSL2`.
-Thereby, a proportion of `r round(faultsj/Nj, 3)` is observed. Per million parts this gives `r faultsj/Nj*10^6`, which means the process is out of control.
-In fact it is a 4-sigma process.
+Thereby, a proportion of `r round(faultsj/Nj, 3)` is observed. Per million parts this gives `r faultsj/Nj*10^6`, which means the process is out of control. In fact it is a $\sim$ 4-sigma process.
 
 ```{r}
 probj<-faultsj/Nj
@@ -391,7 +390,7 @@ Therefore we recommend to use materials of both glass and touchscreen companies.
 
 ## Delivery Times
 
-As earlier, we want to check if the process is Six-Sigma and if it is out-of-control using the Six-Sigma criterion. The process is still assumed to be optimal if the total time until the customer receives the product is distributed as $N(25, 1)$. 
+As earlier, we want to check if the process is Six-Sigma and if it is out-of-control using the Six-Sigma criterion. The process is still assumed to be optimal if the total time until the customer receives the product is distributed as $N(27, 1)$. 
 
 ```{r}
 faults2<-sum((total_time_final>USL)+(total_time_final<LSL))
@@ -437,11 +436,11 @@ In order to change the process to a Six-Sigma process, we need to reduce the sta
 As before collecting new data, two control charts are plotted, in order to check if the process is out-of-control. 
 
 ```{r, results = "hide"}
-qcc(total_time_final, type = "xbar.one", center = 25, std.dev = 1, nsigma = 6)
+qcc(total_time_final, type = "xbar.one", center = 27, std.dev = 1, nsigma = 6)
 qcc(total_time_final[1:300], type = "xbar.one", newdata = total_time_final[301:length(total_time_final)], nsigmas = 6)
 ```
 
-The first control chart shows fewer points beyond the limits, but a larger number of violating runs. It is not clear why this is the case, but it should be investigated further. In the second control chart, there are still no points beyond the limits, and the number of violating runs are fewer than earlier. Also, it is apparent that the estimated center and standard deviation of the process is closer to the optimal process, which means that the improvements have worked, at least when the goal is to make the process more similar to a $N(25,1)$.
+The first control chart shows fewer points beyond the limits, but a larger number of violating runs. It is not clear why this is the case, but it should be investigated further. In the second control chart, there are still no points beyond the limits, and the number of violating runs are fewer than earlier. Also, it is apparent that the estimated center and standard deviation of the process is closer to the optimal process, which means that the improvements have worked, at least when the goal is to make the process more similar to a $N(27, 1)$.
 
 ## Customer Satisfaction Data
 
