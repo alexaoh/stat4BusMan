@@ -112,11 +112,10 @@ sigma_opt <- sqrt(1)
 mu_opt <- 25
 LSL <- (-6) * sigma_opt + mu_opt
 USL <- 6 * sigma_opt + mu_opt
-faults<-sum(total_times>USL) ##+(total_times<LSL))
+faults<-sum((total_times>USL)+(total_times<LSL))
 ```
 
-The bounds LSL and USL in the Six-Sigma environment are calculated to being `r LSL` and `r USL`, respectively.
-However we do not take into account the orders that are delivered before the LSL value, since this would actually be better for the customer. Therefore, the number of faults in the total times is `r faults`, which means that the proportion of faults is `r round(faults/N, 2)`. Note that this shows that the estimations given by the Steering Committed from earlier are severely underestimated. This means that the observed process has `r faults/N*10^6` faults per million, i.e. it is a 2 sigma process and it is clearly out-of-control. This was determined from the Sigma Scale table. However, it can also be calculated that this is a 2 sigma process, as done in the code block below. 
+The bounds LSL and USL in the Six-Sigma environment are calculated to being `r LSL` and `r USL`, respectively. Moreover, the number of faults in the total times is `r faults`, which means that the proportion of faults is `r round(faults/N, 2)`. Note that this shows that the estimations given by the Steering Committed from earlier are severely underestimated. This means that the observed process has `r faults/N*10^6` faults per million, i.e. it is a 2 sigma process and it is clearly out-of-control. This was determined from the Sigma Scale table. However, it can also be calculated that this is a 2 sigma process, as done in the code block below. 
 
 ```{r}
 prob<-faults/N
@@ -208,7 +207,7 @@ lines(xj,f2j,type="l",lwd=2,lty=2)
 abline(v=LSL2,lwd=2,lty=2)
 ```
 
-The dotted vertical lines show the threshold under which a customer satisfaction is considered as a fault. In fact only `r faultsj` faults are observed. The thick Gaussian shows the optimal process, while the dotted Gaussian shows the normal distribution with parameters estimated from the data. It is apparent that the process is very different from the optimal Gaussian process. 
+The dotted vertical line shows the threshold under which a customer satisfaction is considered as a fault. In fact only `r faultsj` faults are observed. The thick Gaussian shows the optimal process, while the dotted Gaussian shows the normal distribution with parameters estimated from the data. It is apparent that the process is very different from the optimal Gaussian process. 
 
 ## Proposed Improvements
 
@@ -238,8 +237,6 @@ t_ship_comp2 = rexp(N2/2,1/1) + rnorm(N2/2, 3,3)
 
 total_time = t_to_ship_2 + c(t_ship_comp1,t_ship_comp2) 
 # company1 shipped the 1st half of phones, comp2 the 2nd
-
-
 ```
 
 Now we have collected `r N2` orders. The new production, shipment (for both companies) and total times are shown in the histograms below. 
@@ -400,7 +397,7 @@ As earlier, we want to check if the process is Six-Sigma and if it is out-of-con
 faults2<-sum((total_time_final>USL)+(total_time_final<LSL))
 ```
 
-Here we use the final data with 1100 orders, where only the delivery company that was judged as the best was used. The total faults in the new process, when it comes to total times, is `r faults2`, which means that the proportion of faults is `r round(faults2/N3, 2)`. This means that the observed process has `r faults2/N3*10^6` faults per million, i.e. it is a $\sim$ 4 sigma process and it is clearly out-of-control. This was determined from the Sigma Scale table. However, it can also be calculated that this is a $\sim$ 4 sigma process, as done in the code block below.  
+Here we use the final data with 1100 orders, where only the delivery company that was judged as the best was used. The total faults in the new process, when it comes to total times, is `r faults2`, which means that the proportion of faults is `r round(faults2/N3, 5)`. This means that the observed process has `r round(faults2/N3*10^6, 2)` faults per million, i.e. it is a $\sim$ 4 sigma process and it is clearly out-of-control. This was determined from the Sigma Scale table. However, it can also be calculated that this is a $\sim$ 4 sigma process, as done in the code block below.  
 
 ```{r}
 prob2<-faults2/N3
@@ -421,13 +418,13 @@ abline(v=LSL,lwd=2,lty=2)
 abline(v=USL,lwd=2,lty=2)
 
 DPMO<-1000000*(1-pnorm(USL,mu_tot_final+1.5*sigma_tot_final,sigma_tot_final))
-DPMO
 ```
 
 The visualization above also shows that the process is not Six-Sigma, since there are times that are above USL and below LSL. The long term DPMO is `r DPMO`, which is an improvement compared to earlier. 
 
 ```{r}
 sigma<-(USL-mu_tot_final)/6
+sigma
 DPMO<-1000000*(1-pnorm(USL,mu_tot_final+1.5*sigma,sigma))
 DPMO
 
@@ -474,7 +471,7 @@ lines(xj,f2j,type="l",lwd=2,lty=2)
 abline(v=LSL2,lwd=2,lty=2)
 ```
 
-The observed process does not perfectly match the optimal one, but is very close. The variance is still slightly bigger, the mean is in fact higher than it was defined by managers in the beginning.
+The observed process does not perfectly match the optimal one, but it is very close. The variance is still slightly bigger, while the mean is smaller than it was defined by managers in the beginning.
 
 # End -  Further analysis
 
